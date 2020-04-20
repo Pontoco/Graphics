@@ -50,10 +50,10 @@ Shader "Hidden/HDRP/Sky/HDRISky"
     TEXTURECUBE(_Cubemap);
     SAMPLER(sampler_Cubemap);
     
-    TEXTURECUBE(_Cloudmap);
+    TEXTURE2D(_Cloudmap);
     SAMPLER(sampler_Cloudmap);
     
-    TEXTURECUBE(_Flowmap);
+    TEXTURE2D(_Flowmap);
     SAMPLER(sampler_Flowmap);
 
     float4 _SkyParam; // x exposure, y multiplier, zw rotation (cosPhi and sinPhi)
@@ -192,7 +192,8 @@ Shader "Hidden/HDRP/Sky/HDRISky"
     float2 GetFlow(float3 dir)
     {
 #ifdef FLOWMAP_WIND
-        return SAMPLE_TEXTURECUBE_LOD(_Flowmap, sampler_Flowmap, dir, 0).rg * 2.0 - 1.0;
+        float angle = atan2(dir.z, dir.x )/(2.0*PI) + 0.5;
+        return SAMPLE_TEXTURE2D_LOD(_Flowmap, sampler_Flowmap, float2(angle, dir.y), 0);
 #else
         // source: https://www.gdcvault.com/play/1020146/Moving-the-Heavens-An-Artistic
         float3 d = float3(0, 1, 0) - dir;
@@ -203,8 +204,9 @@ Shader "Hidden/HDRP/Sky/HDRISky"
     float3 sampleCloud(float3 dir, float3 skyColor)
     {
 #if CLOUDMAP
-        float4 cloud = SAMPLE_TEXTURECUBE_LOD(_Cloudmap, sampler_Cloudmap, dir, 0);
-        return lerp(skyColor, cloud.rgb, cloud.a);
+        float angle = atan2(dir.z, dir.x)/(2.0*PI) + 0.5;
+        float4 clouds = SAMPLE_TEXTURE2D_LOD(_Cloudmap, sampler_Cloudmap, float2(angle, dir.y), 0);
+        return lerp(skyColor, clouds.rgb, clouds.a);
 #else
         return SAMPLE_TEXTURECUBE_LOD(_Cubemap, sampler_Cubemap, dir, 0).rgb;
 #endif
@@ -322,8 +324,6 @@ Shader "Hidden/HDRP/Sky/HDRISky"
 
         float3 dir1 = dir + uv1.x * tangent + uv1.y * bitangent;
         float3 dir2 = dir + uv2.x * tangent + uv2.y * bitangent;
-        dir2.x *= -1;
-        dir2.z *= -1;
 
         // Sample twice
         float3 color1 = sampleCloud(dir1, sky);
@@ -332,7 +332,8 @@ Shader "Hidden/HDRP/Sky/HDRISky"
         // Blend color samples
         return lerp(color1, color2, abs(2.0 * alpha.x));
 #elif CLOUDMAP
-        float4 clouds = SAMPLE_TEXTURECUBE_LOD(_Cloudmap, sampler_Cloudmap, dir, 0);
+        float angle = atan2(dir.z, dir.x )/(2.0*PI) + 0.5;
+        float4 clouds = SAMPLE_TEXTURE2D_LOD(_Cloudmap, sampler_Cloudmap, float2(angle, dir.y), 0);
         return lerp(sky, clouds.rgb, clouds.a);
 #else
         return sky;

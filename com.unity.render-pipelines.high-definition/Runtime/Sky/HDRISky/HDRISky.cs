@@ -20,7 +20,7 @@ namespace UnityEngine.Rendering.HighDefinition
         public CloudLayerParameter      cloudLayerMode      = new CloudLayerParameter(CloudLayerMode.None);
         /// <summary>Cubemap used to render the clouds.</summary>
         [Tooltip("Specify the cubemap HDRP uses to render the clouds.")]
-        public CubemapParameter         cloudMap            = new CubemapParameter(null);
+        public TextureParameter         cloudMap            = new TextureParameter(null);
         public ClampedFloatParameter    coverage            = new ClampedFloatParameter(0.7f, 0.0f, 1.0f);
         public ClampedFloatParameter    opacity             = new ClampedFloatParameter(0.4f, 0.0f, 1.0f);
 
@@ -31,7 +31,7 @@ namespace UnityEngine.Rendering.HighDefinition
         public BoolParameter            enableFlowmap       = new BoolParameter(false);
         /// <summary>Cubemap used to distort the uv for the HDRI sky.</summary>
         [Tooltip("Specify the cubemap HDRP uses for UV distortion.")]
-        public CubemapParameter         flowmap             = new CubemapParameter(null);
+        public TextureParameter         flowmap             = new TextureParameter(null);
         /// <summary>Rotation of the distortion.</summary>
         [Tooltip("Sets the rotation of the distortion.")]
         public ClampedFloatParameter    windDirection       = new ClampedFloatParameter(0.0f, 0.0f, 360.0f);
