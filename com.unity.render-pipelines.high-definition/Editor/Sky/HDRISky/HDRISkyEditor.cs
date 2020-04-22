@@ -39,8 +39,8 @@ namespace UnityEditor.Rendering.HighDefinition
         SerializedDataParameter m_RectLightShadow;
         SerializedDataParameter m_ShadowTint;
 
-        GUIContent[]    m_IntensityModes = { new GUIContent("None"), new GUIContent("Cubemap"), new GUIContent("Procedural") };
-        int[]           m_IntensityModeValues = { (int)CloudLayerMode.None, (int)CloudLayerMode.Cubemap, (int)CloudLayerMode.Procedural };
+        GUIContent[]    m_CloudLayerModes = { new GUIContent("None"), new GUIContent("Semi equirectangular"), new GUIContent("Procedural") };
+        int[]           m_CloudLayerModeValues = { (int)CloudLayerMode.None, (int)CloudLayerMode.Latlong, (int)CloudLayerMode.Procedural };
 
         RTHandle m_IntensityTexture;
         Material m_IntegrateHDRISkyMaterial; // Compute the HDRI sky intensity in lux for the skybox
@@ -146,9 +146,9 @@ namespace UnityEditor.Rendering.HighDefinition
             {
                 DrawOverrideCheckbox(m_CloudLayerMode);
                 using (new EditorGUI.DisabledScope(!m_CloudLayerMode.overrideState.boolValue))
-                    m_CloudLayerMode.value.intValue = EditorGUILayout.IntPopup(new GUIContent("Cloud Layer"), (int)m_CloudLayerMode.value.intValue, m_IntensityModes, m_IntensityModeValues);
+                    m_CloudLayerMode.value.intValue = EditorGUILayout.IntPopup(new GUIContent("Cloud Layer"), (int)m_CloudLayerMode.value.intValue, m_CloudLayerModes, m_CloudLayerModeValues);
             }
-            if (m_CloudLayerMode.value.intValue == (int)CloudLayerMode.Cubemap)
+            if (m_CloudLayerMode.value.intValue == (int)CloudLayerMode.Latlong)
             {
                 EditorGUI.indentLevel++;
                 PropertyField(m_CloudMap);

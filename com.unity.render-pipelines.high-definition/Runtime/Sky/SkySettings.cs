@@ -45,8 +45,8 @@ namespace UnityEngine.Rendering.HighDefinition
     {
         /// <summary>No Cloud Layer.</summary>
         None,
-        /// <summary>Use a cubemap.</summary>
-        Cubemap,
+        /// <summary>Use a 2D texture.</summary>
+        Latlong,
         /// <summary>Procedural clouds.</summary>
         Procedural,
     }

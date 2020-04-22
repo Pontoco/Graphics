@@ -5,6 +5,8 @@ namespace UnityEngine.Rendering.HighDefinition
         Material m_SkyHDRIMaterial; // Renders a cubemap into a render texture (can be cube or 2D)
         MaterialPropertyBlock m_PropertyBlock = new MaterialPropertyBlock();
 
+        float windScroll = 0.0f, lastTime = 0.0f;
+
         private static int m_RenderCubemapID                                = 0; // FragBaking
         private static int m_RenderFullscreenSkyID                          = 1; // FragRender
         private static int m_RenderCubemapWithBackplateID                   = 2; // FragBakingBackplate
@@ -136,7 +138,7 @@ namespace UnityEngine.Rendering.HighDefinition
             }
             else
             {
-                if (hdriSky.cloudLayerMode.value == CloudLayerMode.Cubemap)
+                if (hdriSky.cloudLayerMode.value == CloudLayerMode.Latlong)
                 {
                     m_SkyHDRIMaterial.DisableKeyword("PROCEDURAL_CLOUDS");
                     m_SkyHDRIMaterial.EnableKeyword("CLOUDMAP");
@@ -167,9 +169,12 @@ namespace UnityEngine.Rendering.HighDefinition
                 }
 
                 float rot = -Mathf.Deg2Rad*hdriSky.windDirection.value;
-                m_SkyHDRIMaterial.SetFloat(HDShaderIDs._WindForce, hdriSky.windForce.value);
+                m_SkyHDRIMaterial.SetFloat(HDShaderIDs._WindForce, windScroll);
                 m_SkyHDRIMaterial.SetFloat(HDShaderIDs._WindCos, Mathf.Cos(rot));
                 m_SkyHDRIMaterial.SetFloat(HDShaderIDs._WindSin, Mathf.Sin(rot));
+
+                windScroll += hdriSky.windForce.value * (Time.time - lastTime);
+                lastTime = Time.time;
             }
             else
             {

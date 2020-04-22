@@ -193,7 +193,7 @@ Shader "Hidden/HDRP/Sky/HDRISky"
     {
 #ifdef FLOWMAP_WIND
         float angle = atan2(dir.z, dir.x )/(2.0*PI) + 0.5;
-        return SAMPLE_TEXTURE2D_LOD(_Flowmap, sampler_Flowmap, float2(angle, dir.y), 0);
+        return SAMPLE_TEXTURE2D_LOD(_Flowmap, sampler_Flowmap, float2(angle, abs(dir.y)), 0);
 #else
         // source: https://www.gdcvault.com/play/1020146/Moving-the-Heavens-An-Artistic
         float3 d = float3(0, 1, 0) - dir;
@@ -204,6 +204,8 @@ Shader "Hidden/HDRP/Sky/HDRISky"
     float3 sampleCloud(float3 dir, float3 skyColor)
     {
 #if CLOUDMAP
+        if (dir.y < 0) return skyColor;
+
         float angle = atan2(dir.z, dir.x)/(2.0*PI) + 0.5;
         float4 clouds = SAMPLE_TEXTURE2D_LOD(_Cloudmap, sampler_Cloudmap, float2(angle, dir.y), 0);
         return lerp(skyColor, clouds.rgb, clouds.a);
@@ -297,8 +299,8 @@ Shader "Hidden/HDRP/Sky/HDRISky"
         float2 uv1 = uv, uv2 = uv;
 
     #if WIND
-        uv1.x += _WindForce * _Time.y * 0.01;
-        uv2.x -= 0.05 * _Time.y;
+        uv1.x += _WindForce * 0.01;
+        uv2.x = uv1.x + 0.2 * _Time.y;
     #endif
         
         float noise1 = simpleNoise(uv1, 5);
@@ -316,7 +318,7 @@ Shader "Hidden/HDRP/Sky/HDRISky"
         // Compute flow factor
         float2 flow = GetFlow(windDir);
 
-        float time = _Time.y * _WindForce * 0.01;
+        float time = _WindForce * 0.01;
         float2 alpha = frac(float2(time, time + 0.5)) - 0.5;
 
         float2 uv1 = alpha.x * flow;
@@ -332,9 +334,7 @@ Shader "Hidden/HDRP/Sky/HDRISky"
         // Blend color samples
         return lerp(color1, color2, abs(2.0 * alpha.x));
 #elif CLOUDMAP
-        float angle = atan2(dir.z, dir.x )/(2.0*PI) + 0.5;
-        float4 clouds = SAMPLE_TEXTURE2D_LOD(_Cloudmap, sampler_Cloudmap, float2(angle, dir.y), 0);
-        return lerp(sky, clouds.rgb, clouds.a);
+        return sampleCloud(dir, sky);
 #else
         return sky;
 #endif
