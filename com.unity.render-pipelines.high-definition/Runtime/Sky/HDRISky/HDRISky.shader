@@ -193,7 +193,7 @@ Shader "Hidden/HDRP/Sky/HDRISky"
     {
 #ifdef FLOWMAP_WIND
         float angle = atan2(dir.z, dir.x )/(2.0*PI) + 0.5;
-        return SAMPLE_TEXTURE2D_LOD(_Flowmap, sampler_Flowmap, float2(angle, abs(dir.y)), 0);
+        return SAMPLE_TEXTURE2D_LOD(_Flowmap, sampler_Flowmap, float2(angle, abs(dir.y)), 0).rg * 2.0 - 1.0;
 #else
         // source: https://www.gdcvault.com/play/1020146/Moving-the-Heavens-An-Artistic
         float3 d = float3(0, 1, 0) - dir;
