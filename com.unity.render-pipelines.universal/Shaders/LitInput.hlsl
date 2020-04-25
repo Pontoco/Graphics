@@ -12,6 +12,7 @@ half4 _SpecColor;
 half4 _EmissionColor;
 half _Cutoff;
 half _Smoothness;
+half _SubsurfaceScattering;
 half _Metallic;
 half _BumpScale;
 half _OcclusionStrength;

@@ -20,6 +20,8 @@ Shader "Universal Render Pipeline/Lit"
         _SpecColor("Specular", Color) = (0.2, 0.2, 0.2)
         _SpecGlossMap("Specular", 2D) = "white" {}
 
+        _SubsurfaceScattering("Subsurface Scattering", Range(0.0, 1.0)) = 0.0
+
         [ToggleOff] _SpecularHighlights("Specular Highlights", Float) = 1.0
         [ToggleOff] _EnvironmentReflections("Environment Reflections", Float) = 1.0
 

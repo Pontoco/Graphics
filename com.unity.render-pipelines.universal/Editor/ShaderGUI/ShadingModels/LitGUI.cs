@@ -40,6 +40,9 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             public static GUIContent highlightsText = new GUIContent("Specular Highlights",
                 "When enabled, the Material reflects the shine from direct lighting.");
 
+            public static GUIContent subsurfaceScatteringText = new GUIContent("Subsurface Scattering",
+                "How much light hitting the object scatters within it. (ASG)");
+
             public static GUIContent reflectionsText =
                 new GUIContent("Environment Reflections",
                     "When enabled, the Material samples reflections from the nearest Reflection Probes or Lighting Probe.");
@@ -67,6 +70,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             public MaterialProperty bumpScaleProp;
             public MaterialProperty occlusionStrength;
             public MaterialProperty occlusionMap;
+            public MaterialProperty subsurfaceScattering;
+
 
             // Advanced Props
             public MaterialProperty highlights;
@@ -87,6 +92,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 bumpScaleProp = BaseShaderGUI.FindProperty("_BumpScale", properties, false);
                 occlusionStrength = BaseShaderGUI.FindProperty("_OcclusionStrength", properties, false);
                 occlusionMap = BaseShaderGUI.FindProperty("_OcclusionMap", properties, false);
+                subsurfaceScattering = BaseShaderGUI.FindProperty("_SubsurfaceScattering", properties, false);
                 // Advanced Props
                 highlights = BaseShaderGUI.FindProperty("_SpecularHighlights", properties, false);
                 reflections = BaseShaderGUI.FindProperty("_EnvironmentReflections", properties, false);
@@ -103,6 +109,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 materialEditor.TexturePropertySingleLine(Styles.occlusionText, properties.occlusionMap,
                     properties.occlusionMap.textureValue != null ? properties.occlusionStrength : null);
             }
+
         }
 
         public static void DoMetallicSpecularArea(LitProperties properties, MaterialEditor materialEditor, Material material)
