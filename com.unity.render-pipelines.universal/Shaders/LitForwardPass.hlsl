@@ -160,7 +160,7 @@ half4 LitForwardFragmentPBR(InputData inputData, half3 albedo, half metallic, ha
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 color = half3(0,0,0);//GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     half3 mainLightContribution = LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
     half3 subsurfaceContribution = LightingSubsurface(mainLight, inputData.normalWS, _SubsurfaceColor, _SubsurfaceRadius);
 
