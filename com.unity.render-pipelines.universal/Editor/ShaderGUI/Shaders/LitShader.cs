@@ -55,6 +55,10 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             base.DrawSurfaceInputs(material);
             LitGUI.Inputs(litProperties, materialEditor, material);
             DrawEmissionProperties(material, true);
+            materialEditor.ShaderProperty(litProperties.subsurfaceScattering, LitGUI.Styles.subsurfaceScatteringText);
+            materialEditor.ShaderProperty(litProperties.subsurfaceColor, LitGUI.Styles.subsurfaceColorText);
+            materialEditor.ShaderProperty(litProperties.subsurfaceRadius, LitGUI.Styles.subsurfaceRadiusText);
+
             DrawTileOffset(materialEditor, baseMapProp);
         }
 
@@ -66,7 +70,6 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 EditorGUI.BeginChangeCheck();
                 materialEditor.ShaderProperty(litProperties.highlights, LitGUI.Styles.highlightsText);
                 materialEditor.ShaderProperty(litProperties.reflections, LitGUI.Styles.reflectionsText);
-                materialEditor.ShaderProperty(litProperties.subsurfaceScattering, LitGUI.Styles.subsurfaceScatteringText);
                 if(EditorGUI.EndChangeCheck())
                 {
                     MaterialChanged(material);

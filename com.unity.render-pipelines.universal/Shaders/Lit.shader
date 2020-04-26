@@ -21,6 +21,8 @@ Shader "Universal Render Pipeline/Lit"
         _SpecGlossMap("Specular", 2D) = "white" {}
 
         _SubsurfaceScattering("Subsurface Scattering", Range(0.0, 1.0)) = 0.0
+        _SubsurfaceColor("Subsurface Color", Color) = (1.0, 0.0, 0.0)
+        _SubsurfaceRadius("Subsurface Radius", Range(0.0, 1.0)) = 1.0
 
         [ToggleOff] _SpecularHighlights("Specular Highlights", Float) = 1.0
         [ToggleOff] _EnvironmentReflections("Environment Reflections", Float) = 1.0
@@ -97,6 +99,8 @@ Shader "Universal Render Pipeline/Lit"
             #pragma shader_feature _ENVIRONMENTREFLECTIONS_OFF
             #pragma shader_feature _SPECULAR_SETUP
             #pragma shader_feature _RECEIVE_SHADOWS_OFF
+
+            #pragma shader_feature DEBUG_FALSE_COLOR
 
             // -------------------------------------
             // Universal Pipeline keywords
