@@ -124,6 +124,30 @@ Varyings LitPassVertex(Attributes input)
     return output;
 }
 
+half3 LightingSubsurface(half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half subsurface, half3 subsurfaceColor) {
+    // Normal lambertian.
+    half NdotL = saturate(dot(normalWS, lightDirectionWS));
+    half3 radiance = lightColor * (lightAttenuation * NdotL);
+
+    // Calculate normalized wrapped lighting. This spreads the light without adding energy.
+    // http://www.cim.mcgill.ca/~derek/files/jgt_wrap.pdf
+
+    NdotL = dot(normalWS, lightDirectionWS);
+    half alpha = subsurface;
+    half theta_m = acos(-alpha); // boundary of the lighting function
+
+    half theta = max(0, NdotL + alpha) - alpha;
+    half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
+    half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
+
+    half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
+    half wrapped_simple = (NdotL + alpha) / (1 + alpha);
+
+    half3 subsurface_radiance = lightColor * subsurfaceColor * wrapped_jgt;
+
+    return subsurface_radiance;
+}
+
 half4 LitForwardFragmentPBR(InputData inputData, half3 albedo, half metallic, half3 specular,
     half smoothness, half occlusion, half3 emission, half alpha, half subsurface)
 {
@@ -133,8 +157,12 @@ half4 LitForwardFragmentPBR(InputData inputData, half3 albedo, half metallic, ha
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
-    color += LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+    half3 color = half3(0,0,0);//GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    half3 mainLightContribution = LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+    half3 subsurfaceContribution = LightingSubsurface(mainLight.color, mainLight.direction, mainLight.distanceAttenuation * mainLight.shadowAttenuation, inputData.normalWS, _SubsurfaceScattering, half3(1,0,0));
+
+    color += mainLightContribution * (1-_SubsurfaceScattering);
+    color += subsurfaceContribution * (_SubsurfaceScattering);
 
 #ifdef _ADDITIONAL_LIGHTS
     uint pixelLightCount = GetAdditionalLightsCount();
@@ -150,6 +178,7 @@ half4 LitForwardFragmentPBR(InputData inputData, half3 albedo, half metallic, ha
 #endif
 
     color += emission;
+
     return half4(color, alpha);
 }
 
