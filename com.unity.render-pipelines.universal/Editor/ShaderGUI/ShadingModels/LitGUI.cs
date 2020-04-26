@@ -42,6 +42,11 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
 
             public static GUIContent subsurfaceScatteringText = new GUIContent("Subsurface Scattering",
                 "How much light hitting the object scatters within it. (ASG)");
+            public static GUIContent subsurfaceColorText = new GUIContent("Subsurface Color",
+                "The color of the material under the surface. " +
+                "Sets the color of subsurface light that radiates out from the object. (ASG)");
+            public static GUIContent subsurfaceRadiusText = new GUIContent("Subsurface Radius",
+                "How far light scatters around/through an object. 0:none, 1:full. (ASG)");
 
             public static GUIContent reflectionsText =
                 new GUIContent("Environment Reflections",
@@ -71,6 +76,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             public MaterialProperty occlusionStrength;
             public MaterialProperty occlusionMap;
             public MaterialProperty subsurfaceScattering;
+            public MaterialProperty subsurfaceColor;
+            public MaterialProperty subsurfaceRadius;
 
 
             // Advanced Props
@@ -93,6 +100,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 occlusionStrength = BaseShaderGUI.FindProperty("_OcclusionStrength", properties, false);
                 occlusionMap = BaseShaderGUI.FindProperty("_OcclusionMap", properties, false);
                 subsurfaceScattering = BaseShaderGUI.FindProperty("_SubsurfaceScattering", properties, false);
+                subsurfaceColor = BaseShaderGUI.FindProperty("_SubsurfaceColor", properties, false);
+                subsurfaceRadius = BaseShaderGUI.FindProperty("_SubsurfaceRadius", properties, false);
                 // Advanced Props
                 highlights = BaseShaderGUI.FindProperty("_SpecularHighlights", properties, false);
                 reflections = BaseShaderGUI.FindProperty("_EnvironmentReflections", properties, false);

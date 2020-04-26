@@ -124,16 +124,19 @@ Varyings LitPassVertex(Attributes input)
     return output;
 }
 
-half3 LightingSubsurface(half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half subsurface, half3 subsurfaceColor) {
-    // Normal lambertian.
-    half NdotL = saturate(dot(normalWS, lightDirectionWS));
-    half3 radiance = lightColor * (lightAttenuation * NdotL);
-
+// Calculates the subsurface light radiating out from the current fragment. This is a simple approximation using wrapped lighting.
+// Note: This does not use distance attenuation, as it is intented to be used with a sun light.
+// Note: This does not subtract out cast shadows (light.shadowAttenuation), as it is intended to be used on non-shadowed objects. (for now)
+half3 LightingSubsurface(Light light, half3 normalWS, half3 subsurfaceColor, half subsurfaceRadius) {
     // Calculate normalized wrapped lighting. This spreads the light without adding energy.
+    // This is a normal lambertian lighting calculation (using N dot L), but warping NdotL
+    // to wrap the light further around an object.
+    //
+    // A normalization term is applied to make sure we do not add energy.
     // http://www.cim.mcgill.ca/~derek/files/jgt_wrap.pdf
 
-    NdotL = dot(normalWS, lightDirectionWS);
-    half alpha = subsurface;
+    half NdotL = dot(normalWS, light.direction);
+    half alpha = subsurfaceRadius;
     half theta_m = acos(-alpha); // boundary of the lighting function
 
     half theta = max(0, NdotL + alpha) - alpha;
@@ -143,7 +146,7 @@ half3 LightingSubsurface(half3 lightColor, half3 lightDirectionWS, half lightAtt
     half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
     half wrapped_simple = (NdotL + alpha) / (1 + alpha);
 
-    half3 subsurface_radiance = lightColor * subsurfaceColor * wrapped_jgt;
+    half3 subsurface_radiance = light.color * subsurfaceColor * wrapped_jgt;
 
     return subsurface_radiance;
 }
@@ -159,8 +162,11 @@ half4 LitForwardFragmentPBR(InputData inputData, half3 albedo, half metallic, ha
 
     half3 color = half3(0,0,0);//GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     half3 mainLightContribution = LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
-    half3 subsurfaceContribution = LightingSubsurface(mainLight.color, mainLight.direction, mainLight.distanceAttenuation * mainLight.shadowAttenuation, inputData.normalWS, _SubsurfaceScattering, half3(1,0,0));
+    half3 subsurfaceContribution = LightingSubsurface(mainLight, inputData.normalWS, _SubsurfaceColor, _SubsurfaceRadius);
 
+    // '_SubsurfaceScattering' controls the portion of the direct light that scatters within the object.
+    // When 1, all light is scattered within the object, so the full contribution of color comes from the subsurface.
+    // When .5, some light is scattered within, picking up the subsurface color, and is added to the normal reflectance of the surface.
     color += mainLightContribution * (1-_SubsurfaceScattering);
     color += subsurfaceContribution * (_SubsurfaceScattering);
 
@@ -182,6 +188,14 @@ half4 LitForwardFragmentPBR(InputData inputData, half3 albedo, half metallic, ha
     return half4(color, alpha);
 }
 
+
+// Calculates the Luminance portion of a Linear RGB Color
+// Luminance is the L component in the L*a*b color space.
+float Luminance(half3 color)
+{
+    return dot(color, half3(0.2126f, 0.7152f, 0.0722f));
+}
+
 // Used in Standard (Physically Based) shader
 half4 LitPassFragment(Varyings input) : SV_Target
 {
@@ -197,6 +211,13 @@ half4 LitPassFragment(Varyings input) : SV_Target
     half4 color = LitForwardFragmentPBR(inputData, surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.emission, surfaceData.alpha, _SubsurfaceScattering);
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
+
+    // Displays the luminance of the HDR color with a 'false color' set of colored bands.
+    // This is like a heatmap to better visualize the wide range of HDR values.
+    #ifdef DEBUG_FALSE_COLOR
+        half luminance = Luminance(color);
+        return half4(.6 + .6 * cos( 6.3*(2.*luminance) + half3(0,23,21)), 0);
+    #endif
 
     return color;
 }
