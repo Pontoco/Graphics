@@ -185,6 +185,26 @@ half4 LitForwardFragmentPBR(InputData inputData, half3 albedo, half metallic, ha
 
     color += emission;
 
+
+    // Implements the Frostbite backface scattering. See links:
+    // https://www.alanzucconi.com/2017/08/30/fast-subsurface-scattering-2/
+    // https://colinbarrebrisebois.com/2011/03/07/gdc-2011-approximating-translucency-for-a-fast-cheap-and-convincing-subsurface-scattering-look/
+    // This effect looks good on paper, but likely will need a thickness map
+    // to make it effective, and generally it doesn't look good without it.
+    // Additionally, it is built for scattering point lights. Scattering with the sun
+    // light comes out a bit too even.
+
+    // Distortion towards the view direction.
+    //half _Distortion = 0.0;
+    // Scale of the effect
+    //half _Scale = .1;
+    // Harshness of the effect
+    //half _Power = 3;
+
+    //half3 H = normalize(mainLight.direction + inputData.normalWS * _Distortion);
+    //half I = pow(saturate(dot(inputData.viewDirectionWS, -H)), _Power) * _Scale;
+    //color += I * _SubsurfaceColor * mainLight.color;
+
     return half4(color, alpha);
 }
 
