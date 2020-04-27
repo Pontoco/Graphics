@@ -111,8 +111,8 @@ Material:
     - _SrcBlend: 1
     - _SubsurfaceAmount: 0
     - _SubsurfaceColor: 0
-    - _SubsurfaceRadius: 0.23
-    - _SubsurfaceScattering: 0.63
+    - _SubsurfaceRadius: 0.738
+    - _SubsurfaceScattering: 0.591
     - _Surface: 0
     - _UVSec: 0
     - _WorkflowMode: 1
