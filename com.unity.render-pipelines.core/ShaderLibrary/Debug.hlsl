@@ -276,4 +276,26 @@ real3 GetColorCodeFunction(real value, real4 threshold)
     return outColor;
 }
 
+// Maps a value within the range to the range of colors in a heatmap.
+half4 HeatMapColor(half value, half minValue, half maxValue)
+{
+    #define HEATMAP_COLORS_COUNT 2
+    half4 colors[HEATMAP_COLORS_COUNT] =
+    {
+        //half4(0.32, 0.00, 0.32, 1.00),
+        //half4(0.00, 0.00, 1.00, 1.00),
+        //half4(0.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 0.60, 0.00, 1.00),
+        //half4(1.00, 0.00, 0.00, 1.00),
+        half4(0, 1, 0, 1),
+        half4(1, 0, 0, 1)
+    };
+    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    half indexMin=floor(ratio);
+    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+
+    return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
+}
+
 #endif // UNITY_DEBUG_INCLUDED
