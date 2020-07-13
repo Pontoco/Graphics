@@ -119,6 +119,7 @@ void InitializeInputData(SpeedTreeVertexOutput input, half3 normalTS, out InputD
     inputData.bakedGI = SAMPLE_GI(NOT_USED, input.vertexSH, inputData.normalWS);
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.clipPos);
     inputData.shadowMask = half4(1, 1, 1, 1); // No GI currently.
+    inputData.bakedGI_directionWS = half3(0,0,0);
 
     #if defined(DEBUG_DISPLAY) && !defined(LIGHTMAP_ON)
     inputData.vertexSH = input.vertexSH;

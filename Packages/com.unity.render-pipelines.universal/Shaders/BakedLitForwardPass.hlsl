@@ -60,6 +60,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
     inputData.shadowMask = half4(1, 1, 1, 1);
+    inputData.bakedGI_directionWS = half3(0,0,0);
 
     #if defined(DEBUG_DISPLAY)
     #if defined(LIGHTMAP_ON)

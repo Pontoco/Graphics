@@ -331,8 +331,10 @@ half3 SubtractDirectMainLightFromLightmap(Light mainLight, half3 normalWS, half3
     return min(bakedGI, realtimeShadow);
 }
 
+// (ASG) Calculates the GI by treating GI as simply another light source we pass into the DirectBRDF.
+// This gives us nice specular contribution from the baked lights! Very helpful in VR for making an object appear grounded.
 half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
-    half3 bakedGI, half occlusion, float3 positionWS,
+    half3 bakedGI, half3 bakedGIDirectionWS, half occlusion, float3 positionWS,
     half3 normalWS, half3 viewDirectionWS)
 {
     half3 reflectVector = reflect(-viewDirectionWS, normalWS);
@@ -342,7 +344,7 @@ half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float cl
     half3 indirectDiffuse = bakedGI;
     half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, positionWS, brdfData.perceptualRoughness, 1.0h);
 
-    half3 color = EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+    half3 color = DirectBDRF(brdfData, normalWS, bakedGIDirectionWS, viewDirectionWS) * indirectDiffuse;
 
     if (IsOnlyAOLightingFeatureEnabled())
     {
@@ -368,7 +370,7 @@ half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float cl
 half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, float3 positionWS, half3 normalWS, half3 viewDirectionWS)
 {
     const BRDFData noClearCoat = (BRDFData)0;
-    return GlobalIllumination(brdfData, noClearCoat, 0.0, bakedGI, occlusion, positionWS, normalWS, viewDirectionWS);
+    return GlobalIllumination(brdfData, noClearCoat, 0.0, bakedGI, half3(0, 0, 0), occlusion, positionWS, normalWS, viewDirectionWS);
 }
 
 half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,

@@ -42,6 +42,7 @@ struct InputData
     half    fogCoord;
     half3   vertexLighting;
     half3   bakedGI;
+    half3   bakedGI_directionWS; // (ASG) XYZ: Light direction, length is 'directionality'
     float2  normalizedScreenSpaceUV;
     half4   shadowMask;
     half3x3 tangentToWorld;
