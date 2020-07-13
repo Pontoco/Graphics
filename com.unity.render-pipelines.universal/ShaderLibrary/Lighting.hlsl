@@ -495,15 +495,25 @@ half3 SubtractDirectMainLightFromLightmap(Light mainLight, half3 normalWS, half3
     return min(bakedGI, realtimeShadow);
 }
 
-half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
+// (ASG) The original implementation of GI.
+/*half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
     half3 reflectVector = reflect(-viewDirectionWS, normalWS);
     half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
 
     half3 indirectDiffuse = bakedGI * occlusion;
+
     half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, occlusion);
 
     return EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+}*/
+
+// (ASG) Calculates the GI by treating GI as simply another light source we pass into the DirectBRDF.
+// This gives us nice specular contribution from the baked lights! Very helpful in VR for making an object appear grounded.
+half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half3 bakedGIDirectionWS, half occlusion, half3 normalWS, half3 viewDirectionWS)
+{
+    half3 indirectDiffuse = bakedGI * occlusion;
+    return DirectBDRF(brdfData, normalWS, bakedGIDirectionWS, viewDirectionWS) * indirectDiffuse;
 }
 
 void MixRealtimeAndBakedGI(inout Light light, half3 normalWS, inout half3 bakedGI, half4 shadowMask)
@@ -573,7 +583,7 @@ half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, hal
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, inputData.bakedGI_directionWS, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
 #ifdef _ADDITIONAL_LIGHTS
