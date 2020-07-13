@@ -248,6 +248,21 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     #else
     bool specularHighlightsOff = false;
     #endif
+
+    // Decreases smoothness as the directionality of the light decreases. This approximates the specular highlight
+    // spreading and scattering, as the light becomes less directional. Without this, even shadowed areas look shiny.
+    // This is recommended by: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/gdc2018-precomputedgiobalilluminationinfrostbite.pdf
+    // Although, here we do not apply the sqrt to the falloff. Instead we square it, which seems to produce a closer image to the blender groundtruth.
+    // The range remap makes sure that surfaces in perfectly direct light (directionality > .9) remain their true specular (directionality rarely reaches a perfect 1).
+    // See this Github discussion for more information: https://github.com/AStrangerGravity/Graphics/pull/2#discussion_r459731172
+
+    // Worth optimizing more if we become ALU bound. Just make sure to do a before/after.
+    // This smoothness falloff has been carefully tested to look good compared to the Blender render.
+    half physicalSmoothness = 1 - PerceptualSmoothnessToRoughness(surfaceData.smoothness);
+    half directionality_squared = dot(inputData.bakedGI_directionWS, inputData.bakedGI_directionWS); // The directionality is encoded as the length of the GI direction vector.
+    half adjustedSmoothness = physicalSmoothness * RangeRemap(0.0, .9 * .9, directionality_squared);
+    surfaceData.smoothness = 1 - RoughnessToPerceptualRoughness(1 - adjustedSmoothness);
+
     BRDFData brdfData;
 
     // NOTE: can modify "surfaceData"...
@@ -274,8 +289,9 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
 
     LightingData lightingData = CreateLightingData(inputData, surfaceData);
 
+    half3 giDirectionWS = SafeNormalize(inputData.bakedGI_directionWS);
     lightingData.giColor = GlobalIllumination(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
-                                              inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
+                                              inputData.bakedGI, giDirectionWS, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS);
 
     if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))

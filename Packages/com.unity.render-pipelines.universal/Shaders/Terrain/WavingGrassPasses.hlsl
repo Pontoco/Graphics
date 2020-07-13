@@ -80,6 +80,7 @@ void InitializeInputData(GrassVertexOutput input, out InputData inputData)
 
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.clipPos);
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.lightmapUV);
+    inputData.bakedGI_directionWS = half3(0,0,0);
 
     #if defined(DEBUG_DISPLAY)
     #if defined(DYNAMICLIGHTMAP_ON)

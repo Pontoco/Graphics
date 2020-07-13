@@ -12,6 +12,10 @@ void GetProceduralQuad(in uint vertexID, out float4 positionCS, out float2 uv)
 }
 #endif
 
+// (ASG) Allow including this file, with only the functions.
+// Note that due to the line 1 pragma, you can only include this file once as utils or with attributes.
+#ifndef UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
+
 struct Attributes
 {
 #if _USE_DRAW_PROCEDURAL
@@ -29,6 +33,7 @@ struct Varyings
     float2 uv         : TEXCOORD0;
     UNITY_VERTEX_OUTPUT_STEREO
 };
+
 
 Varyings FullscreenVert(Attributes input)
 {
@@ -52,5 +57,7 @@ Varyings Vert(Attributes input)
 {
     return FullscreenVert(input);
 }
+
+#endif // UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
 
 #endif
