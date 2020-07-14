@@ -116,6 +116,11 @@ namespace UnityEngine.Rendering.Universal
         /// <inheritdoc />
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            if (UniversalRenderPipeline.asset.colorTransformation == ColorTransformation.InForwardPass)
+            {
+                Shader.EnableKeyword("_COLOR_TRANSFORM_IN_FORWARD");
+            }
+
             Camera camera = renderingData.cameraData.camera;
             ref CameraData cameraData = ref renderingData.cameraData;
             RenderTextureDescriptor cameraTargetDescriptor = renderingData.cameraData.cameraTargetDescriptor;
