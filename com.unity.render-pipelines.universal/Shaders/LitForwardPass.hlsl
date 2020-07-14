@@ -4,6 +4,10 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+// (ASG) Include a few post processing functions from a file. But only the functions.
+#define UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
+#include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"
+
 struct Attributes
 {
     float4 positionOS   : POSITION;
@@ -124,15 +128,6 @@ Varyings LitPassVertex(Attributes input)
     return output;
 }
 
-// (ASG) Borrowed from Shaders/PostProcessing/UberPost.hlsl
-// Apply tonemapping to the input HDR color. Output is sRGB.
-half3 ApplyTonemap(half3 input)
-{
-    float3 aces = unity_to_ACES(input);
-    input = AcesTonemap(aces);
-    return saturate(input);
-}
-
 // Used in Standard (Physically Based) shader
 half4 LitPassFragment(Varyings input) : SV_Target
 {
@@ -149,9 +144,10 @@ half4 LitPassFragment(Varyings input) : SV_Target
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
 
-    // Add tonemapping and color grading in forward pass.
+    // (ASG) Add tonemapping and color grading in forward pass.
+    // This uses the same color grading function as the post processing shader.
 #ifdef _COLOR_TRANSFORM_IN_FORWARD
-    color.rgb = ApplyTonemap(color.rgb);
+    color.rgb = ApplyColorGrading(color.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), _UserLut_Params.xyz, _UserLut_Params.w);
 #endif
 
     color.a = OutputAlpha(color.a);

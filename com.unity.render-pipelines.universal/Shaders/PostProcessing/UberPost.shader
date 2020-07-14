@@ -193,10 +193,13 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
                 color = ApplyVignette(color, uvDistorted, VignetteCenter, VignetteIntensity, VignetteRoundness, VignetteSmoothness, VignetteColor);
             }
 
-            // Color grading is always enabled when post-processing/uber is active
+            // (ASG) Don't apply tonemapping/color grading if we've already applied it in the forward pass.
+            #if !_COLOR_TRANSFORM_IN_FORWARD
             {
+                // (ASG) Color grading does not have a specific keyword toggle. It's always on, unless it's been moved to the forward pass.
                 color = ApplyColorGrading(color, PostExposure, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), LutParams, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), UserLutParams, UserLutContribution);
             }
+            #endif
 
             #if _FILM_GRAIN
             {
