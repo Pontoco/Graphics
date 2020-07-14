@@ -98,6 +98,7 @@ Shader "Universal Render Pipeline/Lit"
 
             // (ASG)
             #pragma multi_compile _ _COLOR_TRANSFORM_IN_FORWARD
+            #pragma multi_compile _ _HDR_GRADING _TONEMAP_ACES _TONEMAP_NEUTRAL
 
             // -------------------------------------
             // Universal Pipeline keywords

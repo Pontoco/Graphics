@@ -6,6 +6,10 @@
 // ----------------------------------------------------------------------------------
 // Common shader data used in most post-processing passes
 
+// (ASG) Allow including this file, with only the functions.
+// Note that due to the line 1 pragma, you can only include this file once as utils or with attributes.
+#ifndef UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
+
 struct Attributes
 {
     float4 positionOS   : POSITION;
@@ -58,6 +62,8 @@ SAMPLER(sampler_LinearClamp);
 SAMPLER(sampler_LinearRepeat);
 SAMPLER(sampler_PointClamp);
 SAMPLER(sampler_PointRepeat);
+
+#endif // UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
 
 // ----------------------------------------------------------------------------------
 // Utility functions
@@ -131,12 +137,7 @@ half3 ApplyColorGrading(half3 input, float postExposure, TEXTURE2D_PARAM(lutTex,
     //   - Apply internal linear LUT
     #else
     {
-        // (ASG) Don't apply tonemapping here if we've already applied it in the forward pass.
-        #if !_COLOR_TRANSFORM_IN_FORWARD
-        {
-            input = ApplyTonemap(input);
-        }
-        #endif
+        input = ApplyTonemap(input);
 
         UNITY_BRANCH
         if (userLutContrib > 0.0)
