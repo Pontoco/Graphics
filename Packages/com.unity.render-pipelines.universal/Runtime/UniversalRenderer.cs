@@ -463,7 +463,8 @@ namespace UnityEngine.Rendering.Universal
             RenderPassInputSummary renderPassInputs = GetRenderPassInputs(ref renderingData);
 
             // Should apply post-processing after rendering this camera?
-            bool applyPostProcessing = cameraData.postProcessEnabled && m_PostProcessPasses.isCreated;
+            // (ASG) And are there any post process effects *actually* active?
+            bool applyPostProcessing = cameraData.postProcessEnabled && m_PostProcessPasses.isCreated && m_PostProcessPasses.postProcessPass.AnyEffectsRequireSeparatePass();
 
             // There's at least a camera in the camera stack that applies post-processing
             bool anyPostProcessing = renderingData.postProcessingEnabled && m_PostProcessPasses.isCreated;
@@ -531,7 +532,7 @@ namespace UnityEngine.Rendering.Universal
             }
 
 
-            createColorTexture |= RequiresIntermediateColorTexture(ref cameraData);
+            createColorTexture |= RequiresIntermediateColorTexture(ref cameraData, applyPostProcessing);
             createColorTexture |= renderPassInputs.requiresColorTexture;
             createColorTexture &= !isPreviewCamera;
 
@@ -1140,13 +1141,16 @@ namespace UnityEngine.Rendering.Universal
 #endif
         }
 
+        // (ASG) applyPostProcessing: Even if the camera has post processing enabled, we may not be applying it,
+        // if no active effects require a separate post process pass.
         /// <summary>
         /// Checks if the pipeline needs to create a intermediate render texture.
         /// </summary>
         /// <param name="cameraData">CameraData contains all relevant render target information for the camera.</param>
+        /// <param name="applyPostProcessPass">We may not be applying the post process pass, even if the camera has post process enabled.</param>
         /// <seealso cref="CameraData"/>
         /// <returns>Return true if pipeline needs to render to a intermediate render texture.</returns>
-        bool RequiresIntermediateColorTexture(ref CameraData cameraData)
+        bool RequiresIntermediateColorTexture(ref CameraData cameraData, bool applyPostProcessPass)
         {
             // When rendering a camera stack we always create an intermediate render texture to composite camera results.
             // We create it upon rendering the Base camera.
@@ -1179,7 +1183,7 @@ namespace UnityEngine.Rendering.Universal
             }
 #endif
 
-            bool requiresBlitForOffscreenCamera = cameraData.postProcessEnabled || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve || !cameraData.isDefaultViewport;
+            bool requiresBlitForOffscreenCamera = (cameraData.postProcessEnabled && applyPostProcessPass) || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve || !cameraData.isDefaultViewport;
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
