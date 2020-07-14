@@ -4,6 +4,10 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/Utils/Fullscreen.hlsl"
 
+// (ASG) Allow including this file, with only the functions.
+// Note that due to the line 1 pragma, you can only include this file once as utils or with attributes.
+#ifndef UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
+
 // ----------------------------------------------------------------------------------
 // Render fullscreen mesh by using a matrix set directly by the pipeline instead of
 // relying on the matrix set by the C++ engine to avoid issues with XR
@@ -38,6 +42,8 @@ SAMPLER(sampler_LinearClamp);
 SAMPLER(sampler_LinearRepeat);
 SAMPLER(sampler_PointClamp);
 SAMPLER(sampler_PointRepeat);
+
+#endif // UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
 
 // ----------------------------------------------------------------------------------
 // Utility functions
