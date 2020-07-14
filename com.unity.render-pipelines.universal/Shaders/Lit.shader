@@ -96,6 +96,10 @@ Shader "Universal Render Pipeline/Lit"
             #pragma shader_feature _SPECULAR_SETUP
             #pragma shader_feature _RECEIVE_SHADOWS_OFF
 
+            // (ASG)
+            #pragma multi_compile _ _COLOR_TRANSFORM_IN_FORWARD
+            #pragma multi_compile _ _HDR_GRADING _TONEMAP_ACES _TONEMAP_NEUTRAL
+
             // -------------------------------------
             // Universal Pipeline keywords
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS

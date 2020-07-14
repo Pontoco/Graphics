@@ -3,6 +3,10 @@
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+// (ASG) Include a few post processing functions from a file. But only the functions.
+#define UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
+#include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"
+
 struct Attributes
 {
     float4 positionOS   : POSITION;
@@ -136,8 +140,15 @@ half4 LitPassFragment(Varyings input) : SV_Target
     InitializeInputData(input, surfaceData.normalTS, inputData);
 
     half4 color = UniversalFragmentPBR(inputData, surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.emission, surfaceData.alpha);
-    
+
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
+
+    // (ASG) Add tonemapping and color grading in forward pass.
+    // This uses the same color grading function as the post processing shader.
+#ifdef _COLOR_TRANSFORM_IN_FORWARD
+    color.rgb = ApplyColorGrading(color.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), _UserLut_Params.xyz, _UserLut_Params.w);
+#endif
+
     color.a = OutputAlpha(color.a);
 
     return color;
