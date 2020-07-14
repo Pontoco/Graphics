@@ -545,7 +545,9 @@ namespace UnityEngine.Rendering.Universal
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
-            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || cameraData.isHdrEnabled ||
+            bool colorTransformInPost = UniversalRenderPipeline.asset.colorTransformation == ColorTransformation.InPostProcessing;
+
+            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || (cameraData.isHdrEnabled && colorTransformInPost) ||
                    !isCompatibleBackbufferTextureDimension || !cameraData.isDefaultViewport || isCapturing ||
                    (Display.main.requiresBlitToBackbuffer && !isStereoEnabled);
         }

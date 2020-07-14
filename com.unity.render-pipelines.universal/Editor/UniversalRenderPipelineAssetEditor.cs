@@ -33,6 +33,7 @@ namespace UnityEditor.Rendering.Universal
 
             // Quality
             public static GUIContent hdrText = EditorGUIUtility.TrTextContent("HDR", "Controls the global HDR settings.");
+            public static GUIContent colorTransformationText = EditorGUIUtility.TrTextContent("Color Transformation", "If set to Forward Pass, tonemapping and color grading will be moved into the ForwardPass. This allows us to use HDR, but completely remove the final blit pass. The forward pass will render in HDR, but output to the framebuffer directly.\n\nNote: This will make transparent and blended objects render slightly incorrectly.");
             public static GUIContent msaaText = EditorGUIUtility.TrTextContent("Anti Aliasing (MSAA)", "Controls the global anti aliasing settings.");
             public static GUIContent renderScaleText = EditorGUIUtility.TrTextContent("Render Scale", "Scales the camera render target allowing the game to render at a resolution different than native resolution. UI is always rendered at native resolution. When VR is enabled, this is overridden by XRSettings.");
 
@@ -104,6 +105,7 @@ namespace UnityEditor.Rendering.Universal
         SerializedProperty m_SupportsTerrainHolesProp;
 
         SerializedProperty m_HDR;
+        SerializedProperty m_ColorTransformation;
         SerializedProperty m_MSAA;
         SerializedProperty m_RenderScale;
 
@@ -172,6 +174,7 @@ namespace UnityEditor.Rendering.Universal
             m_SupportsTerrainHolesProp = serializedObject.FindProperty("m_SupportsTerrainHoles");
 
             m_HDR = serializedObject.FindProperty("m_SupportsHDR");
+            m_ColorTransformation = serializedObject.FindProperty("m_ColorTransformation");
             m_MSAA = serializedObject.FindProperty("m_MSAA");
             m_RenderScale = serializedObject.FindProperty("m_RenderScale");
 
@@ -248,6 +251,7 @@ namespace UnityEditor.Rendering.Universal
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(m_HDR, Styles.hdrText);
+                EditorGUILayout.PropertyField(m_ColorTransformation, Styles.colorTransformationText);
                 EditorGUILayout.PropertyField(m_MSAA, Styles.msaaText);
                 EditorGUI.BeginDisabledGroup(XRGraphics.enabled);
                 m_RenderScale.floatValue = EditorGUILayout.Slider(Styles.renderScaleText, m_RenderScale.floatValue, UniversalRenderPipeline.minRenderScale, UniversalRenderPipeline.maxRenderScale);
