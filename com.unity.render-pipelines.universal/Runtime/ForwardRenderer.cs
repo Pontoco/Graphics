@@ -156,7 +156,9 @@ namespace UnityEngine.Rendering.Universal
             }
 
             // Should apply post-processing after rendering this camera?
-            bool applyPostProcessing = cameraData.postProcessEnabled;
+            // (ASG) And are there any post process effects *actually* active?
+            bool applyPostProcessing = cameraData.postProcessEnabled && m_PostProcessPass.AnyEffectsRequireSeparatePass();
+
             // There's at least a camera in the camera stack that applies post-processing
             bool anyPostProcessing = renderingData.postProcessingEnabled;
 
@@ -196,7 +198,7 @@ namespace UnityEngine.Rendering.Universal
 #if ENABLE_VR && ENABLE_VR_MODULE
             isRunningHololens = UniversalRenderPipeline.IsRunningHololens(camera);
 #endif
-            bool createColorTexture = RequiresIntermediateColorTexture(ref renderingData, cameraTargetDescriptor) ||
+            bool createColorTexture = RequiresIntermediateColorTexture(ref renderingData, cameraTargetDescriptor, applyPostProcessing) ||
                 (rendererFeatures.Count != 0 && !isRunningHololens);
 
             // If camera requires depth and there's no depth pre-pass we create a depth texture that can be read later by effect requiring it.
@@ -513,6 +515,7 @@ namespace UnityEngine.Rendering.Universal
                 msaaSampleCountHasChanged = true;
             }
 
+            // Todo(john): I think this is where that antialiasing settings asset churn is coming from.
             // There's no exposed API to control how a backbuffer is created with MSAA
             // By settings antiAliasing we match what the amount of samples in camera data with backbuffer
             // We only do this for the main camera and this only takes effect in the beginning of next frame.
@@ -525,7 +528,10 @@ namespace UnityEngine.Rendering.Universal
             QualitySettings.antiAliasing = msaaSamples;
 #endif
         }
-        bool RequiresIntermediateColorTexture(ref RenderingData renderingData, RenderTextureDescriptor baseDescriptor)
+
+        // (ASG) applyPostProcessing: Even if the camera has post processing enabled, we may not be applying it,
+        // if no active effects require a separate post process pass.
+        bool RequiresIntermediateColorTexture(ref RenderingData renderingData, RenderTextureDescriptor baseDescriptor, bool applyPostProcessPass)
         {
             // When rendering a camera stack we always create an intermediate render texture to composite camera results.
             // We create it upon rendering the Base camera.
@@ -546,7 +552,7 @@ namespace UnityEngine.Rendering.Universal
                 isCompatibleBackbufferTextureDimension = UnityEngine.XR.XRSettings.deviceEyeTextureDimension == baseDescriptor.dimension;
 #endif
 
-            bool requiresBlitForOffscreenCamera = cameraData.postProcessEnabled || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve;
+            bool requiresBlitForOffscreenCamera = (cameraData.postProcessEnabled && applyPostProcessPass) || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve;
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
