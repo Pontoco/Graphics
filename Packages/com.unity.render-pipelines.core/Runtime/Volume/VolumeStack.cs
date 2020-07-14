@@ -12,7 +12,7 @@ namespace UnityEngine.Rendering
     public sealed class VolumeStack : IDisposable
     {
         // Holds the state of _all_ component types you can possibly add on volumes
-        internal readonly Dictionary<Type, VolumeComponent> components = new();
+        public readonly Dictionary<Type, VolumeComponent> components = new();
 
         // Holds the default value for every volume parameter for faster per-frame stack reset.
         internal (VolumeParameter parameter, VolumeParameter defaultValue)[] defaultParameters;

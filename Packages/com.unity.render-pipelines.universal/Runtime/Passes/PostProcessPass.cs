@@ -140,49 +140,6 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         public void Cleanup() => m_Materials.Cleanup();
 
-        // (ASG)
-        /// <summary>
-        /// Whether any effects require a separate Post Processing pass. Some effects like tonemap and color grading
-        /// can be applied in the ForwardPass without needing a separate post process shader.
-        /// </summary>
-        /// <remarks>Expensive, because we re-query the effects stack. Don't run more than once.</remarks>
-        public bool AnyEffectsRequireSeparatePass()
-        {
-            CacheEffects();
-            return
-                m_DepthOfField.IsActive() ||
-                m_MotionBlur.IsActive() ||
-                m_PaniniProjection.IsActive() ||
-                m_Bloom.IsActive() ||
-                m_LensDistortion.IsActive() ||
-                m_ChromaticAberration.IsActive() ||
-                m_Vignette.IsActive() ||
-                m_FilmGrain.IsActive() ||
-                // These effects are only active if color transformation happens in post.
-                (UniversalRenderPipeline.asset.colorTransformation == ColorTransformation.InPostProcessing && (
-                    m_ColorAdjustments.IsActive() ||
-                    m_ColorLookup.IsActive() ||
-                    m_Tonemapping.IsActive()));
-        }
-
-        private void CacheEffects()
-        {
-            // Start by pre-fetching all builtin effect settings we need
-            // Some of the color-grading settings are only used in the color grading lut pass
-            var stack = VolumeManager.instance.stack;
-            m_DepthOfField        = stack.GetComponent<DepthOfField>();
-            m_MotionBlur          = stack.GetComponent<MotionBlur>();
-            m_PaniniProjection    = stack.GetComponent<PaniniProjection>();
-            m_Bloom               = stack.GetComponent<Bloom>();
-            m_LensDistortion      = stack.GetComponent<LensDistortion>();
-            m_ChromaticAberration = stack.GetComponent<ChromaticAberration>();
-            m_Vignette            = stack.GetComponent<Vignette>();
-            m_ColorLookup         = stack.GetComponent<ColorLookup>();
-            m_ColorAdjustments    = stack.GetComponent<ColorAdjustments>();
-            m_Tonemapping         = stack.GetComponent<Tonemapping>();
-            m_FilmGrain           = stack.GetComponent<FilmGrain>();
-        }
-
         public void Setup(in RenderTextureDescriptor baseDescriptor, in RenderTargetHandle source, bool resolveToScreen, in RenderTargetHandle depth, in RenderTargetHandle internalLut, bool hasFinalPass, bool enableSRGBConversion)
         {
             m_Descriptor = baseDescriptor;
@@ -197,8 +154,6 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_ResolveToScreen = resolveToScreen;
             m_Destination = RenderTargetHandle.CameraTarget;
             m_UseSwapBuffer = true;
-
-            CacheEffects();
         }
 
         public void Setup(in RenderTextureDescriptor baseDescriptor, in RenderTargetHandle source, RenderTargetHandle destination, in RenderTargetHandle depth, in RenderTargetHandle internalLut, bool hasFinalPass, bool enableSRGBConversion)
@@ -214,8 +169,6 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_HasFinalPass = hasFinalPass;
             m_EnableSRGBConversionIfNeeded = enableSRGBConversion;
             m_UseSwapBuffer = false;
-
-            CacheEffects();
         }
 
         public void SetupFinalPass(in RenderTargetHandle source, bool useSwapBuffer = false)
@@ -226,8 +179,6 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_HasFinalPass = false;
             m_EnableSRGBConversionIfNeeded = true;
             m_UseSwapBuffer = useSwapBuffer;
-
-            CacheEffects();
         }
 
         /// <inheritdoc/>
@@ -274,6 +225,20 @@ namespace UnityEngine.Rendering.Universal.Internal
         /// <inheritdoc/>
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            // Start by pre-fetching all builtin effect settings we need
+            // Some of the color-grading settings are only used in the color grading lut pass
+            var stack = VolumeManager.instance.stack;
+            m_DepthOfField        = stack.GetComponent<DepthOfField>();
+            m_MotionBlur          = stack.GetComponent<MotionBlur>();
+            m_PaniniProjection    = stack.GetComponent<PaniniProjection>();
+            m_Bloom               = stack.GetComponent<Bloom>();
+            m_LensDistortion      = stack.GetComponent<LensDistortion>();
+            m_ChromaticAberration = stack.GetComponent<ChromaticAberration>();
+            m_Vignette            = stack.GetComponent<Vignette>();
+            m_ColorLookup         = stack.GetComponent<ColorLookup>();
+            m_ColorAdjustments    = stack.GetComponent<ColorAdjustments>();
+            m_Tonemapping         = stack.GetComponent<Tonemapping>();
+            m_FilmGrain           = stack.GetComponent<FilmGrain>();
             m_UseDrawProcedural = renderingData.cameraData.xr.enabled;
             m_UseFastSRGBLinearConversion = renderingData.postProcessingData.useFastSRGBLinearConversion;
 
@@ -1322,6 +1287,16 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         void SetupColorGrading(CommandBuffer cmd, ref RenderingData renderingData, Material material)
         {
+            // (ASG) Disable color transformation if we're doing it in the forward pass
+            if (UniversalRenderPipeline.asset.colorTransformation == ColorTransformation.InForwardPass)
+            {
+                material.EnableKeyword("_COLOR_TRANSFORM_IN_FORWARD");
+            }
+            else
+            {
+                material.DisableKeyword("_COLOR_TRANSFORM_IN_FORWARD");
+            }
+
             ref var postProcessingData = ref renderingData.postProcessingData;
             bool hdr = postProcessingData.gradingMode == ColorGradingMode.HighDynamicRange;
             int lutHeight = postProcessingData.lutSize;
