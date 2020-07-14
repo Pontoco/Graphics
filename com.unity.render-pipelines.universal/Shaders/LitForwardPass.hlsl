@@ -1,6 +1,7 @@
 #ifndef UNIVERSAL_FORWARD_LIT_PASS_INCLUDED
 #define UNIVERSAL_FORWARD_LIT_PASS_INCLUDED
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 struct Attributes
@@ -124,6 +125,15 @@ Varyings LitPassVertex(Attributes input)
     return output;
 }
 
+// (ASG) Borrowed from Shaders/PostProcessing/UberPost.hlsl
+// Apply tonemapping to the input HDR color. Output is sRGB.
+half3 ApplyTonemap(half3 input)
+{
+    float3 aces = unity_to_ACES(input);
+    input = AcesTonemap(aces);
+    return saturate(input);
+}
+
 // Used in Standard (Physically Based) shader
 half4 LitPassFragment(Varyings input) : SV_Target
 {
@@ -139,6 +149,15 @@ half4 LitPassFragment(Varyings input) : SV_Target
     half4 color = UniversalFragmentPBR(inputData, surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.emission, surfaceData.alpha);
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
+
+    // Add tonemapping and color grading in forward pass.
+#ifdef _COLOR_TRANSFORM_IN_FORWARD
+    color.rgb = ApplyTonemap(color.rgb);
+#endif
+
+    // Return linear color. Conversion to sRGB happens automatically through the target texture format.
+    // (ASG) Note: sRGB conversion *must* be done in hardware, so that filtering / msaa
+    // averaging is done properly in linear space, rather than in sRGB space.
     return color;
 }
 

@@ -131,7 +131,12 @@ half3 ApplyColorGrading(half3 input, float postExposure, TEXTURE2D_PARAM(lutTex,
     //   - Apply internal linear LUT
     #else
     {
-        input = ApplyTonemap(input);
+        // (ASG) Don't apply tonemapping here if we've already applied it in the forward pass.
+        #if !_COLOR_TRANSFORM_IN_FORWARD
+        {
+            input = ApplyTonemap(input);
+        }
+        #endif
 
         UNITY_BRANCH
         if (userLutContrib > 0.0)
