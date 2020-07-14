@@ -15,6 +15,7 @@ namespace UnityEditor.Rendering.Universal
         public SerializedProperty storeActionsOptimizationProperty { get; }
 
         public SerializedProperty hdr { get; }
+        public SerializedProperty colorTransformation { get; }
         public SerializedProperty msaa { get; }
         public SerializedProperty renderScale { get; }
         public SerializedProperty upscalingFilter { get; }
@@ -83,6 +84,7 @@ namespace UnityEditor.Rendering.Universal
             supportsTerrainHolesProp = serializedObject.FindProperty("m_SupportsTerrainHoles");
 
             hdr = serializedObject.FindProperty("m_SupportsHDR");
+            colorTransformation = serializedObject.FindProperty("m_ColorTransformation");
             msaa = serializedObject.FindProperty("m_MSAA");
             renderScale = serializedObject.FindProperty("m_RenderScale");
             upscalingFilter = serializedObject.FindProperty("m_UpscalingFilter");
