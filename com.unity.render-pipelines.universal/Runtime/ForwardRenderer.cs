@@ -144,7 +144,9 @@ namespace UnityEngine.Rendering.Universal
             }
 
             // Should apply post-processing after rendering this camera?
-            bool applyPostProcessing = cameraData.postProcessEnabled;
+            // (ASG) And are there any post process effects *actually* active?
+            bool applyPostProcessing = cameraData.postProcessEnabled && m_PostProcessPass.AnyEffectsRequireSeparatePass();
+
             // There's at least a camera in the camera stack that applies post-processing
             bool anyPostProcessing = renderingData.postProcessingEnabled;
 
@@ -176,7 +178,7 @@ namespace UnityEngine.Rendering.Universal
             if (isStereoEnabled && requiresDepthTexture)
                 requiresDepthPrepass = true;
 
-            bool createColorTexture = RequiresIntermediateColorTexture(ref cameraData);
+            bool createColorTexture = RequiresIntermediateColorTexture(ref cameraData, applyPostProcessing);
             createColorTexture |= (rendererFeatures.Count != 0);
             createColorTexture &= !isPreviewCamera;
 
@@ -442,6 +444,7 @@ namespace UnityEngine.Rendering.Universal
                 msaaSampleCountHasChanged = true;
             }
 
+            // Todo(john): I think this is where that antialiasing settings asset churn is coming from.
             // There's no exposed API to control how a backbuffer is created with MSAA
             // By settings antiAliasing we match what the amount of samples in camera data with backbuffer
             // We only do this for the main camera and this only takes effect in the beginning of next frame.
@@ -454,13 +457,16 @@ namespace UnityEngine.Rendering.Universal
 #endif
         }
 
+        // (ASG) applyPostProcessing: Even if the camera has post processing enabled, we may not be applying it,
+        // if no active effects require a separate post process pass.
         /// <summary>
         /// Checks if the pipeline needs to create a intermediate render texture.
         /// </summary>
         /// <param name="cameraData">CameraData contains all relevant render target information for the camera.</param>
+		/// <param name="applyPostProcessPass">We may not be applying the post process pass, even if the camera has post process enabled.</param>
         /// <seealso cref="CameraData"/>
         /// <returns>Return true if pipeline needs to render to a intermediate render texture.</returns>
-        bool RequiresIntermediateColorTexture(ref CameraData cameraData)
+        bool RequiresIntermediateColorTexture(ref CameraData cameraData, bool applyPostProcessPass)
         {
             // When rendering a camera stack we always create an intermediate render texture to composite camera results.
             // We create it upon rendering the Base camera.
@@ -482,7 +488,7 @@ namespace UnityEngine.Rendering.Universal
                 isCompatibleBackbufferTextureDimension = UnityEngine.XR.XRSettings.deviceEyeTextureDimension == cameraTargetDescriptor.dimension;
 #endif
 
-            bool requiresBlitForOffscreenCamera = cameraData.postProcessEnabled || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve || !cameraData.isDefaultViewport;
+            bool requiresBlitForOffscreenCamera = (cameraData.postProcessEnabled && applyPostProcessPass) || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve || !cameraData.isDefaultViewport;
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
