@@ -110,6 +110,27 @@ namespace UnityEngine.Rendering.Universal
     {
         LowDynamicRange,
         HighDynamicRange
+	}
+	
+    // (ASG)
+    /// <summary>
+    /// Where to do tone-mapping and color grading.
+    /// </summary>
+    public enum ColorTransformation
+    {
+        /// <summary>
+        /// Performs color transformation just before the final output of the ForwardPass shader.
+        /// </summary>
+        /// <remarks>
+        /// This may cause issues with accuracy and blended objects will be blended incorrectly.
+        /// However, it allows us to avoid an extra PostProcess fullscreen blit pass, if it's not otherwise needed.
+        /// </remarks>
+        InForwardPass,
+
+        /// <summary>
+        /// Default: Performs the color transformation as a post processing pass. This is how the non-ASG URP does it.
+        /// </summary>
+        InPostProcessing
     }
 
     /// <summary>
@@ -210,6 +231,7 @@ namespace UnityEngine.Rendering.Universal
 
         // Quality settings
         [SerializeField] bool m_SupportsHDR = true;
+        [SerializeField] ColorTransformation m_ColorTransformation = ColorTransformation.InPostProcessing;
         [SerializeField] MsaaQuality m_MSAA = MsaaQuality.Disabled;
         [SerializeField] float m_RenderScale = 1.0f;
         [SerializeField] UpscalingFilterSelection m_UpscalingFilter = UpscalingFilterSelection.Auto;
@@ -740,6 +762,12 @@ namespace UnityEngine.Rendering.Universal
         {
             get { return m_SupportsHDR; }
             set { m_SupportsHDR = value; }
+        }
+
+        public ColorTransformation colorTransformation
+        {
+            get { return m_ColorTransformation; }
+            set { m_ColorTransformation = value; }
         }
 
         public int msaaSampleCount

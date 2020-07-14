@@ -35,6 +35,7 @@ namespace UnityEditor.Rendering.Universal
 
             // Quality
             public static GUIContent hdrText = EditorGUIUtility.TrTextContent("HDR", "Controls the global HDR settings.");
+            public static GUIContent colorTransformationText = EditorGUIUtility.TrTextContent("Color Transformation", "If set to Forward Pass, tonemapping and color grading will be moved into the ForwardPass. This allows us to use HDR, but completely remove the final blit pass. The forward pass will render in HDR, but output to the framebuffer directly.\n\nNote: This will make transparent and blended objects render slightly incorrectly.");
             public static GUIContent msaaText = EditorGUIUtility.TrTextContent("Anti Aliasing (MSAA)", "Controls the global anti aliasing settings.");
             public static GUIContent renderScaleText = EditorGUIUtility.TrTextContent("Render Scale", "Scales the camera render target allowing the game to render at a resolution different than native resolution. UI is always rendered at native resolution.");
             public static GUIContent upscalingFilterText = EditorGUIUtility.TrTextContent("Upscaling Filter", "Controls the type of filter used for upscaling when render scale is lower than 1.0.");
