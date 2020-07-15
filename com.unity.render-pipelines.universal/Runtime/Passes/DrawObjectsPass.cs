@@ -17,6 +17,17 @@ namespace UnityEngine.Rendering.Universal.Internal
         ProfilingSampler m_ProfilingSampler;
         bool m_IsOpaque;
 
+        // (ASG) Adding color grading to forward pass
+        int m_lutParamsProp = Shader.PropertyToID("_Lut_Params");
+        int m_userLutParamsProp = Shader.PropertyToID("_UserLut_Params");
+        int m_userLutProp = Shader.PropertyToID("_UserLut");
+        int m_internalLutProp = Shader.PropertyToID("_InternalLut");
+        RenderTargetHandle m_internalLut;
+        ColorLookup m_ColorLookup;
+        ColorAdjustments m_ColorAdjustments;
+        Tonemapping m_Tonemapping;
+        bool m_doColorTransform = false; // whether this pass should do color grading / tonemapping
+
         public DrawObjectsPass(string profilerTag, bool opaque, RenderPassEvent evt, RenderQueueRange renderQueueRange, LayerMask layerMask, StencilState stencilState, int stencilReference)
         {
             m_ProfilerTag = profilerTag;
@@ -36,6 +47,25 @@ namespace UnityEngine.Rendering.Universal.Internal
                 m_RenderStateBlock.stencilState = stencilState;
             }
         }
+
+        // Sets up the pass to queue up without doing the color transform
+        public void Setup()
+        {
+            m_doColorTransform = false;
+        }
+
+        // Sets up the pass to queue up with the color transform
+        public void Setup(in RenderTargetHandle internalLut, bool generatedLutTexture)
+        {
+            m_doColorTransform = generatedLutTexture;
+
+            m_internalLut = internalLut;
+            var stack = VolumeManager.instance.stack;
+            m_ColorLookup = stack.GetComponent<ColorLookup>();
+            m_ColorAdjustments = stack.GetComponent<ColorAdjustments>();
+            m_Tonemapping = stack.GetComponent<Tonemapping>();
+        }
+
 
         /// <inheritdoc/>
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
