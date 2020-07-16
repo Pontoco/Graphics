@@ -522,7 +522,7 @@ namespace UnityEngine.Rendering.Universal
 #endif
         }
 
-        bool RequiresIntermediateColorTexture(ref RenderingData renderingData, RenderTextureDescriptor baseDescriptor, bool applyPostProcessPass)
+        bool RequiresIntermediateColorTexture(ref RenderingData renderingData, RenderTextureDescriptor baseDescriptor)
         {
             // When rendering a camera stack we always create an intermediate render texture to composite camera results.
             // We create it upon rendering the Base camera.
@@ -544,13 +544,11 @@ namespace UnityEngine.Rendering.Universal
 #endif
 
 
-            bool requiresBlitForOffscreenCamera = (cameraData.postProcessEnabled && applyPostProcessPass) || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve;
+            bool requiresBlitForOffscreenCamera = cameraData.postProcessEnabled || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve;
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
-            bool colorTransformInPost = false;
-
-            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || (cameraData.isHdrEnabled && colorTransformInPost) ||
+            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || cameraData.isHdrEnabled ||
                    !isCompatibleBackbufferTextureDimension || !cameraData.isDefaultViewport || isCapturing ||
                    (Display.main.requiresBlitToBackbuffer && !isStereoEnabled);
         }
