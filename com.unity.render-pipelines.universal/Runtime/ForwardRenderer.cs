@@ -151,7 +151,6 @@ namespace UnityEngine.Rendering.Universal
             }
 
             // Should apply post-processing after rendering this camera?
-            // (ASG) And are there any post process effects *actually* active?
             bool applyPostProcessing = false;
 
             // There's at least a camera in the camera stack that applies post-processing
