@@ -12,7 +12,7 @@ namespace UnityEngine.Rendering
     public sealed class VolumeStack : IDisposable
     {
         // Holds the state of _all_ component types you can possibly add on volumes
-        public Dictionary<Type, VolumeComponent> components;
+        internal Dictionary<Type, VolumeComponent> components;
 
         internal VolumeStack()
         {
