@@ -144,17 +144,15 @@ namespace UnityEngine.Rendering.Universal
                         rendererFeatures[i].AddRenderPasses(this, ref renderingData);
                 }
 
-                m_RenderOpaqueForwardPass.Setup();
                 EnqueuePass(m_RenderOpaqueForwardPass);
                 EnqueuePass(m_DrawSkyboxPass);
-                m_RenderTransparentForwardPass.Setup();
                 EnqueuePass(m_RenderTransparentForwardPass);
                 return;
             }
 
             // Should apply post-processing after rendering this camera?
             // (ASG) And are there any post process effects *actually* active?
-            bool applyPostProcessing = cameraData.postProcessEnabled && !CanSkipSeparatePostProcessPass();
+            bool applyPostProcessing = false;//cameraData.postProcessEnabled && !CanSkipSeparatePostProcessPass();
 
             // There's at least a camera in the camera stack that applies post-processing
             bool anyPostProcessing = renderingData.postProcessingEnabled;
@@ -261,7 +259,6 @@ namespace UnityEngine.Rendering.Universal
                 EnqueuePass(m_ColorGradingLutPass);
             }
 
-            m_RenderOpaqueForwardPass.Setup(m_ColorGradingLut, generateColorGradingLUT);
             EnqueuePass(m_RenderOpaqueForwardPass);
 
 #if POST_PROCESSING_STACK_2_0_0_OR_NEWER
@@ -303,7 +300,6 @@ namespace UnityEngine.Rendering.Universal
                 EnqueuePass(m_TransparentSettingsPass);
             }
 
-            m_RenderTransparentForwardPass.Setup(m_ColorGradingLut, generateColorGradingLUT);
             EnqueuePass(m_RenderTransparentForwardPass);
             EnqueuePass(m_OnRenderObjectCallbackPass);
 
@@ -555,7 +551,7 @@ namespace UnityEngine.Rendering.Universal
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
-            bool colorTransformInPost = true;
+            bool colorTransformInPost = false;
 
             return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || (cameraData.isHdrEnabled && colorTransformInPost) ||                   !isCompatibleBackbufferTextureDimension || !cameraData.isDefaultViewport || isCapturing ||
                    (Display.main.requiresBlitToBackbuffer && !isStereoEnabled);
@@ -574,45 +570,5 @@ namespace UnityEngine.Rendering.Universal
             bool msaaDepthResolve = false;
             return supportsDepthCopy || msaaDepthResolve;
         }
-
-        // (ASG)
-        /// <summary>
-        /// Some effects like tonemap and color grading can be applied in the ForwardPass without needing a separate
-        /// post process shader. This function returns whether all active post-processing effects are compatible to be
-        /// run in the ForwardPass.
-        /// </summary>
-        /// <remarks>Expensive, because we re-query the effects stack. Don't run more than once.</remarks>
-        public bool CanSkipSeparatePostProcessPass()
-        {
-            var stack = VolumeManager.instance.stack;
-
-            // We can skip the post process pass if only forward effects are activated.
-            // Note: This doesn't allocate. I've profiled it, on desktop. (john)
-            foreach (var type in stack.components.Keys)
-            {
-                if (!(
-                    type == typeof(ChannelMixer) ||
-                    type == typeof(ColorAdjustments) ||
-                    type == typeof(ColorCurves) ||
-                    type == typeof(ColorLookup) ||
-                    type == typeof(LiftGammaGain) ||
-                    type == typeof(ShadowsMidtonesHighlights) ||
-                    type == typeof(SplitToning) ||
-                    type == typeof(Tonemapping) ||
-                    type == typeof(WhiteBalance)))
-                {
-                    VolumeComponent component = stack.components[type];
-                    if (component.active && component is IPostProcessComponent post && post.IsActive())
-                    {
-                        // We've enabled a post effect that's not compatible with ForwardPass execution.
-                        return false;
-                    }
-                }
-            }
-
-            // All effects are either disabled or able to run on forward pass.
-            return true;
-        }
-
     }
 }
