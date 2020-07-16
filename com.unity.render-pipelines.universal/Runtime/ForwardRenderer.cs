@@ -152,7 +152,7 @@ namespace UnityEngine.Rendering.Universal
 
             // Should apply post-processing after rendering this camera?
             // (ASG) And are there any post process effects *actually* active?
-            bool applyPostProcessing = false;//cameraData.postProcessEnabled && !CanSkipSeparatePostProcessPass();
+            bool applyPostProcessing = false;
 
             // There's at least a camera in the camera stack that applies post-processing
             bool anyPostProcessing = renderingData.postProcessingEnabled;
@@ -193,8 +193,7 @@ namespace UnityEngine.Rendering.Universal
 #if ENABLE_VR && ENABLE_VR_MODULE
             isRunningHololens = UniversalRenderPipeline.IsRunningHololens(camera);
 #endif
-            bool createColorTexture = RequiresIntermediateColorTexture(ref renderingData, cameraTargetDescriptor, applyPostProcessing) ||
-                (rendererFeatures.Count != 0 && !isRunningHololens);
+            bool createColorTexture = false;
 
             // If camera requires depth and there's no depth pre-pass we create a depth texture that can be read later by effect requiring it.
             bool createDepthTexture = cameraData.requiresDepthTexture && !requiresDepthPrepass;
@@ -523,8 +522,6 @@ namespace UnityEngine.Rendering.Universal
 #endif
         }
 
-        // (ASG) applyPostProcessing: Even if the camera has post processing enabled, we may not be applying it,
-        // if no active effects require a separate post process pass.
         bool RequiresIntermediateColorTexture(ref RenderingData renderingData, RenderTextureDescriptor baseDescriptor, bool applyPostProcessPass)
         {
             // When rendering a camera stack we always create an intermediate render texture to composite camera results.
@@ -553,7 +550,8 @@ namespace UnityEngine.Rendering.Universal
 
             bool colorTransformInPost = false;
 
-            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || (cameraData.isHdrEnabled && colorTransformInPost) ||                   !isCompatibleBackbufferTextureDimension || !cameraData.isDefaultViewport || isCapturing ||
+            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || (cameraData.isHdrEnabled && colorTransformInPost) ||
+                   !isCompatibleBackbufferTextureDimension || !cameraData.isDefaultViewport || isCapturing ||
                    (Display.main.requiresBlitToBackbuffer && !isStereoEnabled);
         }
 
