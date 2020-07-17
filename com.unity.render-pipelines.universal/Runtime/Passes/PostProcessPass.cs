@@ -116,25 +116,6 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         public void Cleanup() => m_Materials.Cleanup();
 
-
-        private void CacheEffects()
-        {
-            // Start by pre-fetching all builtin effect settings we need
-            // Some of the color-grading settings are only used in the color grading lut pass
-            var stack = VolumeManager.instance.stack;
-            m_DepthOfField        = stack.GetComponent<DepthOfField>();
-            m_MotionBlur          = stack.GetComponent<MotionBlur>();
-            m_PaniniProjection    = stack.GetComponent<PaniniProjection>();
-            m_Bloom               = stack.GetComponent<Bloom>();
-            m_LensDistortion      = stack.GetComponent<LensDistortion>();
-            m_ChromaticAberration = stack.GetComponent<ChromaticAberration>();
-            m_Vignette            = stack.GetComponent<Vignette>();
-            m_ColorLookup         = stack.GetComponent<ColorLookup>();
-            m_ColorAdjustments    = stack.GetComponent<ColorAdjustments>();
-            m_Tonemapping         = stack.GetComponent<Tonemapping>();
-            m_FilmGrain           = stack.GetComponent<FilmGrain>();
-        }
-
         public void Setup(in RenderTextureDescriptor baseDescriptor, in RenderTargetHandle source, in RenderTargetHandle destination, in RenderTargetHandle depth, in RenderTargetHandle internalLut, bool hasFinalPass, bool enableSRGBConversion)
         {
             m_Descriptor = baseDescriptor;
@@ -145,8 +126,6 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_IsFinalPass = false;
             m_HasFinalPass = hasFinalPass;
             m_EnableSRGBConversionIfNeeded = enableSRGBConversion;
-
-            CacheEffects();
         }
 
         public void SetupFinalPass(in RenderTargetHandle source)
@@ -156,8 +135,6 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_IsFinalPass = true;
             m_HasFinalPass = false;
             m_EnableSRGBConversionIfNeeded = true;
-
-            CacheEffects();
         }
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -185,6 +162,20 @@ namespace UnityEngine.Rendering.Universal.Internal
         /// <inheritdoc/>
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            // Start by pre-fetching all builtin effect settings we need
+            // Some of the color-grading settings are only used in the color grading lut pass
+            var stack = VolumeManager.instance.stack;
+            m_DepthOfField        = stack.GetComponent<DepthOfField>();
+            m_MotionBlur          = stack.GetComponent<MotionBlur>();
+            m_PaniniProjection    = stack.GetComponent<PaniniProjection>();
+            m_Bloom               = stack.GetComponent<Bloom>();
+            m_LensDistortion      = stack.GetComponent<LensDistortion>();
+            m_ChromaticAberration = stack.GetComponent<ChromaticAberration>();
+            m_Vignette            = stack.GetComponent<Vignette>();
+            m_ColorLookup         = stack.GetComponent<ColorLookup>();
+            m_ColorAdjustments    = stack.GetComponent<ColorAdjustments>();
+            m_Tonemapping         = stack.GetComponent<Tonemapping>();
+            m_FilmGrain           = stack.GetComponent<FilmGrain>();
 
             if (m_IsFinalPass)
             {
@@ -266,7 +257,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                     // Avoid using m_Source.id as new destination, it may come with a depth buffer that we don't want, may have MSAA that we don't want etc
                     cmd.GetTemporaryRT(ShaderConstants._TempTarget2, GetStereoCompatibleDescriptor(), FilterMode.Bilinear);
                     destination = ShaderConstants._TempTarget2;
-                    tempTarget2Used = true; 
+                    tempTarget2Used = true;
                 }
 
                 return destination;
