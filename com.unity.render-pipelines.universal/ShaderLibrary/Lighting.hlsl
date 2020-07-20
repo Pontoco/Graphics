@@ -583,7 +583,8 @@ half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, hal
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, inputData.bakedGI_directionWS, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+
+    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, inputData.bakedGI_directionWS.xyz, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
 #ifdef _ADDITIONAL_LIGHTS
