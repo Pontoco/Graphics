@@ -22,7 +22,7 @@ struct InputData
     half    fogCoord;
     half3   vertexLighting;
     half3   bakedGI;
-    half3   bakedGI_directionWS;
+    half4   bakedGI_directionWS;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
