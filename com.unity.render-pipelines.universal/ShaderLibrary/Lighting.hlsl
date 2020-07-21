@@ -588,7 +588,7 @@ half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, hal
     // smoothness to linear smoothness. Worth optimizing if we become ALU bound. Just make sure to do a before/after.
     // This smoothness falloff has been carefully tested to look good.
     half linearSmoothness = 1 - PerceptualSmoothnessToRoughness(smoothness);
-    half directionality = length(inputData.bakedGI_directionWS.xyz);
+    half directionality = length(inputData.bakedGI_directionWS);
     half adjustedSmoothness = linearSmoothness * pow(RangeRemap(0.0, .9, directionality), 2);
     half perceptualAdjustedSmoothness = 1 - RoughnessToPerceptualRoughness(1 - adjustedSmoothness);
 
@@ -598,7 +598,7 @@ half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, hal
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 giDirectionWS = SafeNormalize(inputData.bakedGI_directionWS.xyz);
+    half3 giDirectionWS = SafeNormalize(inputData.bakedGI_directionWS);
     half3 color = GlobalIllumination(brdfData, inputData.bakedGI, giDirectionWS, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
