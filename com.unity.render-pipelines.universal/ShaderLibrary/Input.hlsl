@@ -22,7 +22,7 @@ struct InputData
     half    fogCoord;
     half3   vertexLighting;
     half3   bakedGI;
-    half4   bakedGI_directionWS;
+    half3   bakedGI_directionWS; // XYZ: Light direction, length is 'directionality'
 };
 
 ///////////////////////////////////////////////////////////////////////////////

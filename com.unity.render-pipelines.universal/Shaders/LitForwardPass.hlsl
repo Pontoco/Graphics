@@ -79,11 +79,11 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 
     real4 direction_raw = SAMPLE_TEXTURE2D(unity_LightmapInd, samplerunity_Lightmap, uv);
     half3 direction = (direction_raw.xyz - 0.5) * 2; // convert from [0,1] to [-1,1]
-    inputData.bakedGI_directionWS = half4(direction.x, direction.y, direction.z, direction_raw.w);
+    inputData.bakedGI_directionWS = half3(direction.x, direction.y, direction.z);
 
     #else // LIGHTMAP_ON
 
-    inputData.bakedGI_directionWS = half4(0,0,0,0);
+    inputData.bakedGI_directionWS = half3(0,0,0);
 
     #endif
 }
