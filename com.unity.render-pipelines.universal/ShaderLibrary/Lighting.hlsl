@@ -4,6 +4,7 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Debug.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
@@ -577,14 +578,27 @@ half3 VertexLighting(float3 positionWS, half3 normalWS)
 half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, half3 specular,
     half smoothness, half occlusion, half3 emission, half alpha)
 {
+    // Decreases smoothness as the directionality of the light decreases. This approximates the specular highlight
+    // spreading and scattering, as the light becomes less directional. Without this, even shadowed areas look shiny.
+    // This is recommended by: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/gdc2018-precomputedgiobalilluminationinfrostbite.pdf
+    // Although, here we do not apply the sqrt to the falloff. Instead we square it, which seems to produce a closer image to the blender groundtruth.
+    // We may be applying this incorrectly, though.
+
+    // TODO(john): We could collapse this math down a lot, if we knew the proper transformations from perceptual
+    // smoothness to linear smoothness. Worth optimizing if we become ALU bound. Just make sure to do a before/after.
+    // This smoothness falloff has been carefully tested to look good.
+    half linearSmoothness = 1 - PerceptualSmoothnessToRoughness(smoothness);
+    half adjustedSmoothness = linearSmoothness * pow(RangeRemap(0.0, .9, length(inputData.bakedGI_directionWS.xyz)), 2);
+    half perceptualAdjustedSmoothness = 1 - RoughnessToPerceptualRoughness(1 - adjustedSmoothness);
+
     BRDFData brdfData;
-    InitializeBRDFData(albedo, metallic, specular, smoothness, alpha, brdfData);
-    
+    InitializeBRDFData(albedo, metallic, specular, perceptualAdjustedSmoothness, alpha, brdfData);
+
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-
-    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, inputData.bakedGI_directionWS.xyz, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    half3 giDirectionWS = SafeNormalize(inputData.bakedGI_directionWS.xyz);
+    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, giDirectionWS, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
 #ifdef _ADDITIONAL_LIGHTS
