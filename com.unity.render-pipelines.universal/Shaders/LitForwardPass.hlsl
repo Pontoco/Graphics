@@ -77,6 +77,9 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 
     half2 uv = input.lightmapUV;
 
+    // TODO(fixforship): This adds an *additional* unnecessary texture fetch to the shader. We're already sampling
+    // the directional lightmap in the SAMPLE_GI function, so we should sample it first, and feed it
+    // in, instead.
     real4 direction_raw = SAMPLE_TEXTURE2D(unity_LightmapInd, samplerunity_Lightmap, uv);
     half3 direction = (direction_raw.xyz - 0.5) * 2; // convert from [0,1] to [-1,1]
     inputData.bakedGI_directionWS = half3(direction.x, direction.y, direction.z);
