@@ -645,13 +645,6 @@ real Pow4(real x)
 
 TEMPLATE_3_FLT(RangeRemap, min, max, t, return saturate((t - min) / (max - min)))
 
-// Includes clamping.
-real RangeRemapTo(real value, real srcMin, real srcMax, real dstMin, real dstMax) {
-    real value01 = RangeRemap(srcMin, srcMax, value); // clamped
-    real result = dstMin + (dstMax - dstMin) * value01;
-    return result;
-}
-
 // ----------------------------------------------------------------------------
 // Texture utilities
 // ----------------------------------------------------------------------------
