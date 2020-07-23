@@ -276,4 +276,104 @@ real3 GetColorCodeFunction(real value, real4 threshold)
     return outColor;
 }
 
+// Maps a value within the range to the range of colors in a heatmap.
+// 3 color bands: Red, Black, Green
+half4 HeatMapColorRedBlackGreen(half value, half minValue, half maxValue)
+{
+    #define HEATMAP_COLORS_COUNT 3
+    half4 colors[HEATMAP_COLORS_COUNT] =
+    {
+        // min value of the range
+        //half4(0.32, 0.00, 0.32, 1.00),
+        //half4(0.00, 0.00, 1.00, 1.00),
+        //half4(0.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 0.60, 0.00, 1.00),
+        //half4(1.00, 0.00, 0.00, 1.00),
+        half4(1, 0, 0, 1),
+        half4(0, 0, 0, 1),
+        half4(0, 1, 0, 1)
+        // max value of the range
+    };
+    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    half indexMin=floor(ratio);
+    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+
+    return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
+}
+
+// Maps a value within the range to the range of colors in a heatmap.
+// 3 color bands: Red, Black, White
+half4 HeatMapColorRedBlackWhite(half value, half minValue, half maxValue)
+{
+    #define HEATMAP_COLORS_COUNT 3
+    half4 colors[HEATMAP_COLORS_COUNT] =
+    {
+        // min value of the range
+        //half4(0.32, 0.00, 0.32, 1.00),
+        //half4(0.00, 0.00, 1.00, 1.00),
+        //half4(0.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 0.60, 0.00, 1.00),
+        //half4(1.00, 0.00, 0.00, 1.00),
+        half4(1, 0, 0, 1),
+        half4(0, 0, 0, 1),
+        half4(1, 1, 1, 1)
+        // max value of the range
+    };
+    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    half indexMin=floor(ratio);
+    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+
+    return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
+}
+
+// Maps a value within the range to the range of colors in a heatmap.
+// 2 color bands: Red, Black, White
+half4 HeatMapColorBlackWhite(half value, half minValue, half maxValue)
+{
+    #define HEATMAP_COLORS_COUNT 2
+    half4 colors[HEATMAP_COLORS_COUNT] =
+    {
+        // min value of the range
+        //half4(0.32, 0.00, 0.32, 1.00),
+        //half4(0.00, 0.00, 1.00, 1.00),
+        //half4(0.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 1.00, 0.00, 1.00),
+        //half4(1.00, 0.60, 0.00, 1.00),
+        //half4(1.00, 0.00, 0.00, 1.00),
+        half4(0, 0, 0, 1),
+        half4(1, 1, 1, 1)
+        // max value of the range
+    };
+    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    half indexMin=floor(ratio);
+    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+
+    return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
+}
+
+// Maps a value within the range to the range of colors in a heatmap.
+// 6 color bands
+half4 HeatMapColorMulticolor(half value, half minValue, half maxValue)
+{
+    #define HEATMAP_COLORS_COUNT 6
+    half4 colors[HEATMAP_COLORS_COUNT] =
+    {
+        // min value of the range
+        half4(0.32, 0.00, 0.32, 1.00),
+        half4(0.00, 0.00, 1.00, 1.00),
+        half4(0.00, 1.00, 0.00, 1.00),
+        half4(1.00, 1.00, 0.00, 1.00),
+        half4(1.00, 0.60, 0.00, 1.00),
+        half4(1.00, 0.00, 0.00, 1.00),
+        // max value of the range
+    };
+    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    half indexMin=floor(ratio);
+    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+
+    return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
+}
+
 #endif // UNITY_DEBUG_INCLUDED
