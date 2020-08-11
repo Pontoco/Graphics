@@ -495,15 +495,12 @@ half3 SubtractDirectMainLightFromLightmap(Light mainLight, half3 normalWS, half3
     return min(bakedGI, realtimeShadow);
 }
 
-half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
+// (ASG) Calculates the GI by treating GI as simply another light source we pass into the DirectBRDF.
+// This gives us nice specular contribution from the baked lights! Very helpful in VR for making an object appear grounded.
+half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half3 bakedGIDirectionWS, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
-    half3 reflectVector = reflect(-viewDirectionWS, normalWS);
-    half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
-
     half3 indirectDiffuse = bakedGI * occlusion;
-    half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, occlusion);
-
-    return EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+    return DirectBDRF(brdfData, normalWS, bakedGIDirectionWS, viewDirectionWS) * indirectDiffuse;
 }
 
 void MixRealtimeAndBakedGI(inout Light light, half3 normalWS, inout half3 bakedGI, half4 shadowMask)
@@ -567,13 +564,28 @@ half3 VertexLighting(float3 positionWS, half3 normalWS)
 half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, half3 specular,
     half smoothness, half occlusion, half3 emission, half alpha)
 {
+    // Decreases smoothness as the directionality of the light decreases. This approximates the specular highlight
+    // spreading and scattering, as the light becomes less directional. Without this, even shadowed areas look shiny.
+    // This is recommended by: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/gdc2018-precomputedgiobalilluminationinfrostbite.pdf
+    // Although, here we do not apply the sqrt to the falloff. Instead we square it, which seems to produce a closer image to the blender groundtruth.
+    // The range remap makes sure that surfaces in perfectly direct light (directionality > .9) remain their true specular (directionality rarely reaches a perfect 1).
+    // See this Github discussion for more information: https://github.com/AStrangerGravity/Graphics/pull/2#discussion_r459731172
+
+    // Worth optimizing more if we become ALU bound. Just make sure to do a before/after.
+    // This smoothness falloff has been carefully tested to look good compared to the Blender render.
+    half physicalSmoothness = 1 - PerceptualSmoothnessToRoughness(smoothness);
+    half directionality_squared = dot(inputData.bakedGI_directionWS, inputData.bakedGI_directionWS); // The directionality is encoded as the length of the GI direction vector.
+    half adjustedSmoothness = physicalSmoothness * RangeRemap(0.0, .9 * .9, directionality_squared);
+    half perceptualAdjustedSmoothness = 1 - RoughnessToPerceptualRoughness(1 - adjustedSmoothness);
+
     BRDFData brdfData;
-    InitializeBRDFData(albedo, metallic, specular, smoothness, alpha, brdfData);
-    
+    InitializeBRDFData(albedo, metallic, specular, perceptualAdjustedSmoothness, alpha, brdfData);
+
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    half3 giDirectionWS = SafeNormalize(inputData.bakedGI_directionWS);
+    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, giDirectionWS, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
 #ifdef _ADDITIONAL_LIGHTS
