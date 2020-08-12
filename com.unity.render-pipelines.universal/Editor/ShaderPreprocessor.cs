@@ -22,7 +22,7 @@ namespace UnityEditor.Rendering.Universal
         TerrainHoles = (1 << 7)
     }
 
-    internal class ShaderPreprocessor : IPreprocessShaders
+    public class ShaderPreprocessor : IPreprocessShaders
     {
         ShaderKeyword m_MainLightShadows = new ShaderKeyword(ShaderKeywordStrings.MainLightShadows);
         ShaderKeyword m_AdditionalLightsVertex = new ShaderKeyword(ShaderKeywordStrings.AdditionalLightsVertex);
@@ -46,6 +46,19 @@ namespace UnityEditor.Rendering.Universal
         // Multiple callback may be implemented.
         // The first one executed is the one where callbackOrder is returning the smallest number.
         public int callbackOrder { get { return 0; } }
+
+        /// <summary> A function returning true if the shader should be stripped. </summary>
+        public static Func<Shader, ShaderCompilerData, ShaderSnippetData, bool> CustomStrippingFunction;
+
+        bool StripCustom(Shader shader, ShaderCompilerData compilerData, ShaderSnippetData snippetData)
+        {
+            if (CustomStrippingFunction != null)
+            {
+                return CustomStrippingFunction(shader, compilerData, snippetData);
+            }
+
+            return false;
+        }
 
         bool StripUnusedShader(ShaderFeatures features, Shader shader, ShaderCompilerData compilerData)
         {
@@ -184,6 +197,9 @@ namespace UnityEditor.Rendering.Universal
                 return true;
 
             if (StripDeprecated(compilerData))
+                return true;
+
+            if (StripCustom(shader, compilerData, snippetData))
                 return true;
 
             return false;
