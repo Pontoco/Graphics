@@ -67,7 +67,7 @@ namespace UnityEditor.Rendering.Universal
         PaniniProjection = (1 << 8),
     }
 
-    internal class ShaderPreprocessor : IPreprocessShaders
+    public class ShaderPreprocessor : IPreprocessShaders
     {
         public static readonly string kPassNameGBuffer = "GBuffer";
         public static readonly string kTerrainShaderName = "Universal Render Pipeline/Terrain/Lit";
@@ -143,6 +143,19 @@ namespace UnityEditor.Rendering.Universal
         // Multiple callback may be implemented.
         // The first one executed is the one where callbackOrder is returning the smallest number.
         public int callbackOrder { get { return 0; } }
+
+        /// <summary> A function returning true if the shader should be stripped. </summary>
+        public static Func<Shader, ShaderCompilerData, ShaderSnippetData, bool> CustomStrippingFunction;
+
+        bool StripCustom(Shader shader, ShaderCompilerData compilerData, ShaderSnippetData snippetData)
+        {
+            if (CustomStrippingFunction != null)
+            {
+                return CustomStrippingFunction(shader, compilerData, snippetData);
+            }
+
+            return false;
+        }
 
         LocalKeyword TryGetLocalKeyword(Shader shader, string name)
         {
@@ -661,6 +674,9 @@ namespace UnityEditor.Rendering.Universal
             if (compilerData.shaderKeywordSet.IsEnabled(m_AlphaTestOn) &&
                 !IsFeatureEnabled(features, ShaderFeatures.TerrainHoles) &&
                 shader.name.Contains(kTerrainShaderName))
+                return true;
+
+            if (StripCustom(shader, compilerData, snippetData))
                 return true;
 
             return false;
