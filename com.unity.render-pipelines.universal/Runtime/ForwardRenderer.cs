@@ -1,4 +1,3 @@
-using UnityEngine.Profiling;
 using UnityEngine.Rendering.Universal.Internal;
 
 namespace UnityEngine.Rendering.Universal
