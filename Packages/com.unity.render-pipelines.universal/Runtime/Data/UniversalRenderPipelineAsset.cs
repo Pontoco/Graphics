@@ -118,18 +118,18 @@ namespace UnityEngine.Rendering.Universal
     public enum ColorTransformation
     {
         /// <summary>
+        /// Default: Performs the color transformation as a post processing pass. This is how the non-ASG URP does it.
+        /// </summary>
+        InPostProcessing,
+
+        /// <summary>
         /// Performs color transformation just before the final output of the ForwardPass shader.
         /// </summary>
         /// <remarks>
         /// This may cause issues with accuracy and blended objects will be blended incorrectly.
         /// However, it allows us to avoid an extra PostProcess fullscreen blit pass, if it's not otherwise needed.
         /// </remarks>
-        InForwardPass,
-
-        /// <summary>
-        /// Default: Performs the color transformation as a post processing pass. This is how the non-ASG URP does it.
-        /// </summary>
-        InPostProcessing
+        InForwardPass
     }
 
     /// <summary>
