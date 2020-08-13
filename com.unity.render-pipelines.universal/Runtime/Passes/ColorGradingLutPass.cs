@@ -56,6 +56,11 @@ namespace UnityEngine.Rendering.Universal.Internal
         public void Setup(in RenderTargetHandle internalLut)
         {
             m_InternalLut = internalLut;
+
+            // (ASG) This is required, otherwise this pass has the default camera attachment, and the code in
+            // ScriptableRenderer.Execute enables XR mode for this pass (when in forward color grading mode).
+            // (John): I believe this is a bug in URP, and this should be set.
+            ConfigureTarget(m_InternalLut.Identifier());
         }
 
         /// <inheritdoc/>

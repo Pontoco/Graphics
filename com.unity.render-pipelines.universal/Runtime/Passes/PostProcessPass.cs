@@ -257,7 +257,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                     // Avoid using m_Source.id as new destination, it may come with a depth buffer that we don't want, may have MSAA that we don't want etc
                     cmd.GetTemporaryRT(ShaderConstants._TempTarget2, GetStereoCompatibleDescriptor(), FilterMode.Bilinear);
                     destination = ShaderConstants._TempTarget2;
-                    tempTarget2Used = true; 
+                    tempTarget2Used = true;
                 }
 
                 return destination;
@@ -976,6 +976,16 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         void SetupColorGrading(CommandBuffer cmd, ref RenderingData renderingData, Material material)
         {
+            // (ASG) Disable color transformation if we're doing it in the forward pass
+            if (UniversalRenderPipeline.asset.colorTransformation == ColorTransformation.InForwardPass)
+            {
+                material.EnableKeyword("_COLOR_TRANSFORM_IN_FORWARD");
+            }
+            else
+            {
+                material.DisableKeyword("_COLOR_TRANSFORM_IN_FORWARD");
+            }
+
             ref var postProcessingData = ref renderingData.postProcessingData;
             bool hdr = postProcessingData.gradingMode == ColorGradingMode.HighDynamicRange;
             int lutHeight = postProcessingData.lutSize;

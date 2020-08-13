@@ -128,6 +128,7 @@ namespace UnityEngine.Rendering.Universal
         /// <inheritdoc />
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+
             Camera camera = renderingData.cameraData.camera;
             ref CameraData cameraData = ref renderingData.cameraData;
             RenderTextureDescriptor cameraTargetDescriptor = renderingData.cameraData.cameraTargetDescriptor;
@@ -144,14 +145,18 @@ namespace UnityEngine.Rendering.Universal
                         rendererFeatures[i].AddRenderPasses(this, ref renderingData);
                 }
 
+                m_RenderOpaqueForwardPass.Setup();
                 EnqueuePass(m_RenderOpaqueForwardPass);
                 EnqueuePass(m_DrawSkyboxPass);
+                m_RenderTransparentForwardPass.Setup();
                 EnqueuePass(m_RenderTransparentForwardPass);
                 return;
             }
 
             // Should apply post-processing after rendering this camera?
-            bool applyPostProcessing = cameraData.postProcessEnabled;
+            // (ASG) And are there any post process effects *actually* active?
+            bool applyPostProcessing = cameraData.postProcessEnabled && !CanSkipSeparatePostProcessPass();
+
             // There's at least a camera in the camera stack that applies post-processing
             bool anyPostProcessing = renderingData.postProcessingEnabled;
 
@@ -191,7 +196,7 @@ namespace UnityEngine.Rendering.Universal
 #if ENABLE_VR && ENABLE_VR_MODULE
             isRunningHololens = UniversalRenderPipeline.IsRunningHololens(camera);
 #endif
-            bool createColorTexture = RequiresIntermediateColorTexture(ref renderingData, cameraTargetDescriptor) ||
+            bool createColorTexture = RequiresIntermediateColorTexture(ref renderingData, cameraTargetDescriptor, applyPostProcessing) ||
                 (rendererFeatures.Count != 0 && !isRunningHololens);
 
             // If camera requires depth and there's no depth pre-pass we create a depth texture that can be read later by effect requiring it.
@@ -257,6 +262,8 @@ namespace UnityEngine.Rendering.Universal
                 EnqueuePass(m_ColorGradingLutPass);
             }
 
+            m_RenderOpaqueForwardPass.Setup(m_ColorGradingLut, generateColorGradingLUT);
+
             EnqueuePass(m_RenderOpaqueForwardPass);
 
 #if POST_PROCESSING_STACK_2_0_0_OR_NEWER
@@ -298,6 +305,7 @@ namespace UnityEngine.Rendering.Universal
                 EnqueuePass(m_TransparentSettingsPass);
             }
 
+            m_RenderTransparentForwardPass.Setup(m_ColorGradingLut, generateColorGradingLUT);
             EnqueuePass(m_RenderTransparentForwardPass);
             EnqueuePass(m_OnRenderObjectCallbackPass);
 
@@ -508,6 +516,7 @@ namespace UnityEngine.Rendering.Universal
                 msaaSampleCountHasChanged = true;
             }
 
+            // Todo(john): I think this is where that antialiasing settings asset churn is coming from.
             // There's no exposed API to control how a backbuffer is created with MSAA
             // By settings antiAliasing we match what the amount of samples in camera data with backbuffer
             // We only do this for the main camera and this only takes effect in the beginning of next frame.
@@ -520,7 +529,10 @@ namespace UnityEngine.Rendering.Universal
             QualitySettings.antiAliasing = msaaSamples;
 #endif
         }
-        bool RequiresIntermediateColorTexture(ref RenderingData renderingData, RenderTextureDescriptor baseDescriptor)
+
+        // (ASG) applyPostProcessing: Even if the camera has post processing enabled, we may not be applying it,
+        // if no active effects require a separate post process pass.
+        bool RequiresIntermediateColorTexture(ref RenderingData renderingData, RenderTextureDescriptor baseDescriptor, bool applyPostProcessPass)
         {
             // When rendering a camera stack we always create an intermediate render texture to composite camera results.
             // We create it upon rendering the Base camera.
@@ -541,11 +553,13 @@ namespace UnityEngine.Rendering.Universal
                 isCompatibleBackbufferTextureDimension = UnityEngine.XR.XRSettings.deviceEyeTextureDimension == baseDescriptor.dimension;
 #endif
 
-            bool requiresBlitForOffscreenCamera = cameraData.postProcessEnabled || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve;
+            bool requiresBlitForOffscreenCamera = (cameraData.postProcessEnabled && applyPostProcessPass) || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve;
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
-            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || cameraData.isHdrEnabled ||
+            bool colorTransformInPost = UniversalRenderPipeline.asset.colorTransformation == ColorTransformation.InPostProcessing;
+
+            return requiresBlitForOffscreenCamera || cameraData.isSceneViewCamera || isScaledRender || (cameraData.isHdrEnabled && colorTransformInPost) ||
                    !isCompatibleBackbufferTextureDimension || !cameraData.isDefaultViewport || isCapturing ||
                    (Display.main.requiresBlitToBackbuffer && !isStereoEnabled);
         }
@@ -563,5 +577,50 @@ namespace UnityEngine.Rendering.Universal
             bool msaaDepthResolve = false;
             return supportsDepthCopy || msaaDepthResolve;
         }
+
+        // (ASG)
+        /// <summary>
+        /// Some effects like tonemap and color grading can be applied in the ForwardPass without needing a separate
+        /// post process shader. This function returns whether all active post-processing effects are compatible to be
+        /// run in the ForwardPass.
+        /// </summary>
+        /// <remarks>Expensive, because we re-query the effects stack. Don't run more than once.</remarks>
+        public bool CanSkipSeparatePostProcessPass()
+        {
+            if (UniversalRenderPipeline.asset.colorTransformation != ColorTransformation.InForwardPass)
+            {
+                return false;
+            }
+
+            var stack = VolumeManager.instance.stack;
+
+            // We can skip the post process pass if only forward effects are activated.
+            // Note: This doesn't allocate. I've profiled it, on desktop. (john)
+            foreach (var type in stack.components.Keys)
+            {
+                if (!(
+                    type == typeof(ChannelMixer) ||
+                    type == typeof(ColorAdjustments) ||
+                    type == typeof(ColorCurves) ||
+                    type == typeof(ColorLookup) ||
+                    type == typeof(LiftGammaGain) ||
+                    type == typeof(ShadowsMidtonesHighlights) ||
+                    type == typeof(SplitToning) ||
+                    type == typeof(Tonemapping) ||
+                    type == typeof(WhiteBalance)))
+                {
+                    VolumeComponent component = stack.components[type];
+                    if (component.active && component is IPostProcessComponent post && post.IsActive())
+                    {
+                        // We've enabled a post effect that's not compatible with ForwardPass execution.
+                        return false;
+                    }
+                }
+            }
+
+            // All effects are either disabled or able to run on forward pass.
+            return true;
+        }
+
     }
 }

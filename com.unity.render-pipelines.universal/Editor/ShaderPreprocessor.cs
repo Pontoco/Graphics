@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 
 namespace UnityEditor.Rendering.Universal
 {
-    internal class ShaderPreprocessor : IPreprocessShaders
+    public class ShaderPreprocessor : IPreprocessShaders
     {
         [Flags]
         enum ShaderFeatures
@@ -45,6 +45,19 @@ namespace UnityEditor.Rendering.Universal
         // Multiple callback may be implemented.
         // The first one executed is the one where callbackOrder is returning the smallest number.
         public int callbackOrder { get { return 0; } }
+
+        /// <summary> A function returning true if the shader should be stripped. </summary>
+        public static Func<Shader, ShaderCompilerData, ShaderSnippetData, bool> CustomStrippingFunction;
+
+        bool StripCustom(Shader shader, ShaderCompilerData compilerData, ShaderSnippetData snippetData)
+        {
+            if (CustomStrippingFunction != null)
+            {
+                return CustomStrippingFunction(shader, compilerData, snippetData);
+            }
+
+            return false;
+        }
 
         bool StripUnusedShader(ShaderFeatures features, Shader shader, ShaderCompilerData compilerData)
         {
@@ -185,6 +198,9 @@ namespace UnityEditor.Rendering.Universal
             if (StripDeprecated(compilerData))
                 return true;
 
+            if (StripCustom(shader, compilerData, snippetData))
+                return true;
+
             return false;
         }
 
@@ -214,13 +230,22 @@ namespace UnityEditor.Rendering.Universal
 
             int prevVariantCount = compilerDataList.Count;
 
-            for (int i = 0; i < compilerDataList.Count; ++i)
+            var inputShaderVariantCount = compilerDataList.Count;
+            for (int i = 0; i < inputShaderVariantCount;)
             {
-                if (StripUnused(features, shader, snippetData, compilerDataList[i]))
-                {
+                bool removeInput = StripUnused(features, shader, snippetData, compilerDataList[i]);
+                if (removeInput)
+                    compilerDataList[i] = compilerDataList[--inputShaderVariantCount];
+                else
+                    ++i;
+            }
+
+            if(compilerDataList is List<ShaderCompilerData> inputDataList)
+                inputDataList.RemoveRange(inputShaderVariantCount, inputDataList.Count - inputShaderVariantCount);
+            else
+            {
+                for(int i = compilerDataList.Count -1; i >= inputShaderVariantCount; --i)
                     compilerDataList.RemoveAt(i);
-                    --i;
-                }
             }
 
             if (urpAsset.shaderVariantLogLevel != ShaderVariantLogLevel.Disabled)
