@@ -985,6 +985,16 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         void SetupColorGrading(CommandBuffer cmd, ref RenderingData renderingData, Material material)
         {
+            // (ASG) Disable color transformation if we're doing it in the forward pass
+            if (UniversalRenderPipeline.asset.colorTransformation == ColorTransformation.InForwardPass)
+            {
+                material.EnableKeyword("_COLOR_TRANSFORM_IN_FORWARD");
+            }
+            else
+            {
+                material.DisableKeyword("_COLOR_TRANSFORM_IN_FORWARD");
+            }
+
             ref var postProcessingData = ref renderingData.postProcessingData;
             bool hdr = postProcessingData.gradingMode == ColorGradingMode.HighDynamicRange;
             int lutHeight = postProcessingData.lutSize;
