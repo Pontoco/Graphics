@@ -1494,6 +1494,32 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
     #region KeywordDescriptors
     static class CoreKeywordDescriptors
     {
+        public static KeywordDescriptor GradingSettings = new KeywordDescriptor()
+        {
+            displayName = "Grading Settings",
+            referenceName = "",
+            type = KeywordType.Enum,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+            entries = new KeywordEntry[]
+            {
+                // Additional underscore is prepended to referenceName
+                new KeywordEntry() { displayName = "Off", referenceName = "" }, // doesn't set any keyword
+                new KeywordEntry() { displayName = "HDR Grading", referenceName = "HDR_GRADING" },
+                new KeywordEntry() { displayName = "LDR Tonemap ACES", referenceName = "TONEMAP_ACES" },
+                new KeywordEntry() { displayName = "LDR Tonemap Neutral", referenceName = "TONEMAP_NEUTRAL" },
+            }
+        };
+
+        public static KeywordDescriptor ColorTransform = new KeywordDescriptor()
+        {
+            displayName = "Transform Color in Forward Pass",
+            referenceName = "_COLOR_TRANSFORM_IN_FORWARD",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+        };
+
         public static readonly KeywordDescriptor StaticLightmap = new KeywordDescriptor()
         {
             displayName = "Static Lightmap",
