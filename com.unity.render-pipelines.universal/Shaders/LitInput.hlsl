@@ -17,6 +17,18 @@ half _BumpScale;
 half _OcclusionStrength;
 CBUFFER_END
 
+// (ASG) Used when tonemapping and color grading is done in the forward pass.
+#ifdef _COLOR_TRANSFORM_IN_FORWARD
+
+float4 _Lut_Params;
+float4 _UserLut_Params;
+TEXTURE2D(_UserLut);
+TEXTURE2D(_InternalLut);
+SAMPLER(sampler_LinearClamp);
+float _TestParam;
+
+#endif
+
 TEXTURE2D(_OcclusionMap);       SAMPLER(sampler_OcclusionMap);
 TEXTURE2D(_MetallicGlossMap);   SAMPLER(sampler_MetallicGlossMap);
 TEXTURE2D(_SpecGlossMap);       SAMPLER(sampler_SpecGlossMap);

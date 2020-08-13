@@ -1,7 +1,10 @@
 Shader "Hidden/Universal Render Pipeline/UberPost"
 {
     HLSLINCLUDE
-        
+
+        // (ASG)
+        #pragma multi_compile _ _COLOR_TRANSFORM_IN_FORWARD
+
         #pragma multi_compile_local _ _DISTORTION
         #pragma multi_compile_local _ _CHROMATIC_ABERRATION
         #pragma multi_compile_local _ _BLOOM_LQ _BLOOM_HQ _BLOOM_LQ_DIRT _BLOOM_HQ_DIRT
@@ -190,10 +193,13 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
                 color = ApplyVignette(color, uvDistorted, VignetteCenter, VignetteIntensity, VignetteRoundness, VignetteSmoothness, VignetteColor);
             }
 
-            // Color grading is always enabled when post-processing/uber is active
+            // (ASG) Don't apply tonemapping/color grading if we've already applied it in the forward pass.
+            #if !_COLOR_TRANSFORM_IN_FORWARD
             {
+                // (ASG) Color grading does not have a specific keyword toggle. It's always on, unless it's been moved to the forward pass.
                 color = ApplyColorGrading(color, PostExposure, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), LutParams, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), UserLutParams, UserLutContribution);
             }
+            #endif
 
             #if _FILM_GRAIN
             {
