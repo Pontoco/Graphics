@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.Rendering
@@ -10,6 +11,8 @@ namespace UnityEngine.Rendering
     [AddComponentMenu("Miscellaneous/Volume")]
     public class Volume : MonoBehaviour
     {
+        public int affectsRenderLayers = -1; // flags must use int to properly use MaskField in editor
+
         /// <summary>
         /// Specifies whether to apply the Volume to the entire Scene or not.
         /// </summary>
