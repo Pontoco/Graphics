@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
 
             if (postProcessEnabled && postProcessFeatureSet == PostProcessingFeatureSet.Integrated)
             {
-                m_ColorGradingLutPass.Setup(m_ColorGradingLutHandle);
+                m_ColorGradingLutPass.Setup(m_ColorGradingLutHandle, VolumeManager.instance.stack);
                 EnqueuePass(m_ColorGradingLutPass);
 
                 // When using Upscale Render Texture on a Pixel Perfect Camera, we want all post-processing effects done with a low-res RT,
@@ -166,7 +166,7 @@ namespace UnityEngine.Experimental.Rendering.Universal
                 EnqueuePass(m_FinalBlitPass);
             }
         }
-        
+
         public override void SetupCullingParameters(ref ScriptableCullingParameters cullingParameters, ref CameraData cameraData)
         {
             cullingParameters.cullingOptions = CullingOptions.None;

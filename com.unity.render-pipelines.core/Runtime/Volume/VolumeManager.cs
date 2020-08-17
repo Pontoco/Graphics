@@ -65,6 +65,7 @@ namespace UnityEngine.Rendering
             ReloadBaseTypes();
 
             stack = CreateStack();
+
         }
 
         /// <summary>
@@ -291,7 +292,7 @@ namespace UnityEngine.Rendering
         /// <param name="layerMask">The LayerMask that Unity uses to filter Volumes that it should consider
         /// for blending.</param>
         /// <seealso cref="VolumeStack"/>
-        public void Update(VolumeStack stack, Transform trigger, LayerMask layerMask)
+        public void Update(VolumeStack stack, Transform trigger, LayerMask layerMask, uint renderingLayerMask = uint.MaxValue)
         {
             Assert.IsNotNull(stack);
 
@@ -326,6 +327,12 @@ namespace UnityEngine.Rendering
                     && !IsVolumeRenderedByCamera(volume, camera))
                     continue;
 #endif
+
+                // (ASG) Skip if the volume is not set to affect this render layer.
+                if ((renderingLayerMask & (uint)volume.affectsRenderLayers) == 0)
+                {
+                    continue;
+                }
 
                 // Skip disabled volumes and volumes without any data or weight
                 if (!volume.enabled || volume.profileRef == null || volume.weight <= 0f)

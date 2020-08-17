@@ -17,6 +17,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         readonly GraphicsFormat m_LdrLutFormat;
 
         RenderTargetHandle m_InternalLut;
+        VolumeStack m_PostProcessingStack; // Which post processing stack to read for the color grading settings.
 
         public ColorGradingLutPass(RenderPassEvent evt, PostProcessData data)
         {
@@ -53,9 +54,10 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_LdrLutFormat = GraphicsFormat.R8G8B8A8_UNorm;
         }
 
-        public void Setup(in RenderTargetHandle internalLut)
+        public void Setup(in RenderTargetHandle internalLut, in VolumeStack postProcessingStack)
         {
             m_InternalLut = internalLut;
+            m_PostProcessingStack = postProcessingStack;
 
             // (ASG) This is required, otherwise this pass has the default camera attachment, and the code in
             // ScriptableRenderer.Execute enables XR mode for this pass (when in forward color grading mode).
@@ -69,7 +71,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             var cmd = CommandBufferPool.Get(k_ProfilerTag);
 
             // Fetch all color grading settings
-            var stack = VolumeManager.instance.stack;
+            var stack = m_PostProcessingStack;
             var channelMixer              = stack.GetComponent<ChannelMixer>();
             var colorAdjustments          = stack.GetComponent<ColorAdjustments>();
             var curves                    = stack.GetComponent<ColorCurves>();

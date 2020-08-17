@@ -107,6 +107,13 @@ namespace UnityEngine.Rendering.Universal
             get => 8;
         }
 
+        // (ASG) The set of render layers that have separate post processing.
+        // Only applies in forward color grading mode.
+        // 0 indexed. ie. 0 == "Layer 1" in the inspector.
+        // todo: make this a dynamic value so that we support only one lut in full postprocess pass mode
+        public static readonly int[] renderLayersWithColorGrading = {0, 1, 2};
+        public static readonly Dictionary<int, VolumeStack> renderLayerStacks = new Dictionary<int, VolumeStack>();
+
         public UniversalRenderPipeline(UniversalRenderPipelineAsset asset)
         {
             SetSupportedRenderingFeatures();
@@ -145,6 +152,11 @@ namespace UnityEngine.Rendering.Universal
             CameraCaptureBridge.enabled = true;
 
             RenderingUtils.ClearSystemInfoCache();
+
+            foreach (int supportedRenderLayer in renderLayersWithColorGrading)
+            {
+                renderLayerStacks[supportedRenderLayer] = VolumeManager.instance.CreateStack();
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -453,7 +465,31 @@ namespace UnityEngine.Rendering.Universal
                 trigger = mainAdditionalCameraData != null && mainAdditionalCameraData.volumeTrigger != null ? mainAdditionalCameraData.volumeTrigger : trigger;
             }
 
-            VolumeManager.instance.Update(trigger, layerMask);
+
+            // (ASG)
+            // Update multiple stacks. One for each render layer.
+            if (asset.colorTransformation == ColorTransformation.InForwardPass)
+            {
+                // Update the stack for each render layer.
+                VolumeManager volumeManager = VolumeManager.instance;
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (int i = 0; i < renderLayersWithColorGrading.Length; i++)
+                {
+                    int renderLayer = renderLayersWithColorGrading[i];
+                    volumeManager.Update(renderLayerStacks[renderLayer], trigger, layerMask, (uint) 1 << renderLayer);
+                    Debug.Log($"{i}   {renderLayerStacks[renderLayer].GetComponent<ColorAdjustments>().postExposure.value}");
+                }
+
+                // Update the singleton stack. Uses all volumes affecting render layer 1.
+                // This makes sure that other existing code that reads the singleton Volume stack still gets
+                // something sensible.
+                VolumeManager.instance.Update(VolumeManager.instance.stack, trigger, layerMask, 1);
+            }
+            else
+            {
+                // Default behavior. Uses all volumes affecting render layer 1.
+                VolumeManager.instance.Update(VolumeManager.instance.stack, trigger, layerMask, 1);
+            }
         }
 
         static bool CheckPostProcessForDepth(in CameraData cameraData)
