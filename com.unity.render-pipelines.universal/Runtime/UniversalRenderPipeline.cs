@@ -477,7 +477,6 @@ namespace UnityEngine.Rendering.Universal
                 {
                     int renderLayer = renderLayersWithColorGrading[i];
                     volumeManager.Update(renderLayerStacks[renderLayer], trigger, layerMask, (uint) 1 << renderLayer);
-                    Debug.Log($"{i}   {renderLayerStacks[renderLayer].GetComponent<ColorAdjustments>().postExposure.value}");
                 }
 
                 // Update the singleton stack. Uses all volumes affecting render layer 1.

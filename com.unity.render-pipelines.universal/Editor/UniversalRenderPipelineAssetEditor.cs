@@ -135,7 +135,6 @@ namespace UnityEditor.Rendering.Universal
         SerializedProperty m_DebugLevelProp;
 
         SerializedProperty m_ShaderVariantLogLevel;
-        SerializedProperty m_RenderLayersWithColorGrading;
 
         LightRenderingMode selectedLightRenderingMode;
         SerializedProperty m_PostProcessingFeatureSet;
@@ -204,7 +203,6 @@ namespace UnityEditor.Rendering.Universal
             m_DebugLevelProp = serializedObject.FindProperty("m_DebugLevel");
 
             m_ShaderVariantLogLevel = serializedObject.FindProperty("m_ShaderVariantLogLevel");
-            m_RenderLayersWithColorGrading = serializedObject.FindProperty("m_RenderLayersWithColorGrading");
 
             m_PostProcessingFeatureSet = serializedObject.FindProperty("m_PostProcessingFeatureSet");
             m_ColorGradingMode = serializedObject.FindProperty("m_ColorGradingMode");
@@ -402,24 +400,6 @@ namespace UnityEditor.Rendering.Universal
                 EditorGUILayout.PropertyField(m_MixedLightingSupportedProp, Styles.mixedLightingSupportLabel);
                 EditorGUILayout.PropertyField(m_DebugLevelProp, Styles.debugLevel);
                 EditorGUILayout.PropertyField(m_ShaderVariantLogLevel, Styles.shaderVariantLogLevel);
-
-                // (ASG) RenderLayersWithColorGrading.
-                GUIContent label1 = EditorGUIUtility.TrTextContent("Affect Render Layers", "(ASG) Which render layers this post process volume affects.");
-                var rect = EditorGUILayout.GetControlRect();
-                EditorGUI.BeginProperty(rect, label1, m_RenderLayersWithColorGrading);
-                EditorGUI.BeginChangeCheck();
-
-                string[] displayedOptions = Enumerable.Range(1, 32).Select(i => $"Layer {i}").ToArray();
-                var mask = m_RenderLayersWithColorGrading.intValue;
-                mask = EditorGUI.MaskField(rect, label1, mask, displayedOptions);
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    m_RenderLayersWithColorGrading.intValue = mask;
-                }
-                EditorGUI.EndProperty();
-                // (ASG)
-
                 EditorGUI.indentLevel--;
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();

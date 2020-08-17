@@ -210,7 +210,6 @@ namespace UnityEngine.Rendering.Universal
         [SerializeField] bool m_SupportsDynamicBatching = false;
         [SerializeField] bool m_MixedLightingSupported = true;
         [SerializeField] PipelineDebugLevel m_DebugLevel = PipelineDebugLevel.Disabled;
-        [SerializeField] int m_RenderLayersWithColorGrading = 1;
 
         // Post-processing settings
 #pragma warning disable 414 // 'field' is assigned but never used
@@ -679,12 +678,6 @@ namespace UnityEngine.Rendering.Universal
         {
             get { return m_ShaderVariantLogLevel; }
             set { m_ShaderVariantLogLevel = value; }
-        }
-
-        public int renderLayersWithColorGrading
-        {
-            get { return m_RenderLayersWithColorGrading; }
-            set { m_RenderLayersWithColorGrading = value; }
         }
 
         public PipelineDebugLevel debugLevel
