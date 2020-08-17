@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.Rendering.Universal.Internal;
 
 namespace UnityEngine.Rendering.Universal
@@ -9,14 +10,15 @@ namespace UnityEngine.Rendering.Universal
     /// </summary>
     public sealed class ForwardRenderer : ScriptableRenderer
     {
+
         const int k_DepthStencilBufferBits = 32;
         const string k_CreateCameraTextures = "Create Camera Texture";
 
-        ColorGradingLutPass m_ColorGradingLutPass;
+        ColorGradingLutPass[] m_ColorGradingLutPasses;
         DepthOnlyPass m_DepthPrepass;
         MainLightShadowCasterPass m_MainLightShadowCasterPass;
         AdditionalLightsShadowCasterPass m_AdditionalLightsShadowCasterPass;
-        DrawObjectsPass m_RenderOpaqueForwardPass;
+        DrawObjectsPass[] m_RenderOpaqueForwardPasses;
         DrawSkyboxPass m_DrawSkyboxPass;
         CopyDepthPass m_CopyDepthPass;
         CopyColorPass m_CopyColorPass;
@@ -39,7 +41,7 @@ namespace UnityEngine.Rendering.Universal
         RenderTargetHandle m_DepthTexture;
         RenderTargetHandle m_OpaqueColor;
         RenderTargetHandle m_AfterPostProcessColor;
-        RenderTargetHandle m_ColorGradingLut;
+        RenderTargetHandle[] m_ColorGradingLuts; // In forward color grading: one lut for each render layer, in post process grading: a single lut for the whole screen.
 
         ForwardLights m_ForwardLights;
         StencilState m_DefaultStencilState;
@@ -69,13 +71,27 @@ namespace UnityEngine.Rendering.Universal
             m_MainLightShadowCasterPass = new MainLightShadowCasterPass(RenderPassEvent.BeforeRenderingShadows);
             m_AdditionalLightsShadowCasterPass = new AdditionalLightsShadowCasterPass(RenderPassEvent.BeforeRenderingShadows);
             m_DepthPrepass = new DepthOnlyPass(RenderPassEvent.BeforeRenderingPrepasses, RenderQueueRange.opaque, data.opaqueLayerMask);
-            m_ColorGradingLutPass = new ColorGradingLutPass(RenderPassEvent.BeforeRenderingPrepasses, data.postProcessData);
-            m_RenderOpaqueForwardPass = new DrawObjectsPass("Render Opaques", true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
+
+            int[] renderLayersWithGrading = UniversalRenderPipeline.renderLayersWithColorGrading;
+            m_ColorGradingLutPasses = new ColorGradingLutPass[renderLayersWithGrading.Length];
+            for (int i = 0; i < renderLayersWithGrading.Length; i++)
+            {
+                m_ColorGradingLutPasses[i] = new ColorGradingLutPass(RenderPassEvent.BeforeRenderingPrepasses, data.postProcessData);
+            }
+
+            m_RenderOpaqueForwardPasses = new DrawObjectsPass[renderLayersWithGrading.Length];
+            for (int i = 0; i < renderLayersWithGrading.Length; i++)
+            {
+                int renderLayer = renderLayersWithGrading[i];
+                uint renderLayerMask = (uint)1 << renderLayer;
+                m_RenderOpaqueForwardPasses[i] = new DrawObjectsPass("Render Opaques, Layer " + renderLayer, true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, renderLayerMask, m_DefaultStencilState, stencilData.stencilReference);
+            }
+
             m_CopyDepthPass = new CopyDepthPass(RenderPassEvent.AfterRenderingSkybox, m_CopyDepthMaterial);
             m_DrawSkyboxPass = new DrawSkyboxPass(RenderPassEvent.BeforeRenderingSkybox);
             m_CopyColorPass = new CopyColorPass(RenderPassEvent.AfterRenderingSkybox, m_SamplingMaterial);
             m_TransparentSettingsPass = new TransparentSettingsPass(RenderPassEvent.BeforeRenderingTransparents, data.shadowTransparentReceive);
-            m_RenderTransparentForwardPass = new DrawObjectsPass("Render Transparents", false, RenderPassEvent.BeforeRenderingTransparents, RenderQueueRange.transparent, data.transparentLayerMask, m_DefaultStencilState, stencilData.stencilReference);
+            m_RenderTransparentForwardPass = new DrawObjectsPass("Render Transparents", false, RenderPassEvent.BeforeRenderingTransparents, RenderQueueRange.transparent, data.transparentLayerMask, UInt32.MaxValue, m_DefaultStencilState, stencilData.stencilReference);
             m_OnRenderObjectCallbackPass = new InvokeOnRenderObjectCallbackPass(RenderPassEvent.BeforeRenderingPostProcessing);
             m_PostProcessPass = new PostProcessPass(RenderPassEvent.BeforeRenderingPostProcessing, data.postProcessData, m_BlitMaterial);
             m_FinalPostProcessPass = new PostProcessPass(RenderPassEvent.AfterRendering + 1, data.postProcessData, m_BlitMaterial);
@@ -93,7 +109,13 @@ namespace UnityEngine.Rendering.Universal
             m_DepthTexture.Init("_CameraDepthTexture");
             m_OpaqueColor.Init("_CameraOpaqueTexture");
             m_AfterPostProcessColor.Init("_AfterPostProcessTexture");
-            m_ColorGradingLut.Init("_InternalGradingLut");
+
+            m_ColorGradingLuts = new RenderTargetHandle[renderLayersWithGrading.Length];
+            for (int i = 0; i < renderLayersWithGrading.Length; i++)
+            {
+                m_ColorGradingLuts[i].Init("_InternalGradingLut_Layer"+i);
+            }
+
             m_ForwardLights = new ForwardLights();
 
             supportedRenderingFeatures = new RenderingFeatures()
@@ -132,8 +154,12 @@ namespace UnityEngine.Rendering.Universal
                         rendererFeatures[i].AddRenderPasses(this, ref renderingData);
                 }
 
-                m_RenderOpaqueForwardPass.Setup();
-                EnqueuePass(m_RenderOpaqueForwardPass);
+                for (int i = 0; i < UniversalRenderPipeline.renderLayersWithColorGrading.Length; i++)
+                {
+                    m_RenderOpaqueForwardPasses[i].Setup();
+                    EnqueuePass(m_RenderOpaqueForwardPasses[i]);
+                }
+
                 EnqueuePass(m_DrawSkyboxPass);
                 m_RenderTransparentForwardPass.Setup();
                 EnqueuePass(m_RenderTransparentForwardPass);
@@ -245,15 +271,22 @@ namespace UnityEngine.Rendering.Universal
                 EnqueuePass(m_DepthPrepass);
             }
 
+            int[] layers = UniversalRenderPipeline.renderLayersWithColorGrading;
             if (generateColorGradingLUT)
             {
-                m_ColorGradingLutPass.Setup(m_ColorGradingLut, ref renderingData);
-                EnqueuePass(m_ColorGradingLutPass);
+                for (int i = 0; i < layers.Length; i++)
+                {
+                    m_ColorGradingLutPasses[i].Setup(m_ColorGradingLuts[i], UniversalRenderPipeline.renderLayerStacks[layers[i]], ref renderingData);
+                    EnqueuePass(m_ColorGradingLutPasses[i]);
+                }
             }
 
-            m_RenderOpaqueForwardPass.Setup(m_ColorGradingLut, generateColorGradingLUT);
+            for (int i = 0; i < layers.Length; i++)
+            {
+                m_RenderOpaqueForwardPasses[i].Setup(m_ColorGradingLuts[i], UniversalRenderPipeline.renderLayerStacks[layers[i]], generateColorGradingLUT);
+                EnqueuePass(m_RenderOpaqueForwardPasses[i]);
+            }
 
-            EnqueuePass(m_RenderOpaqueForwardPass);
 
             bool isOverlayCamera = cameraData.renderType == CameraRenderType.Overlay;
             if (camera.clearFlags == CameraClearFlags.Skybox && RenderSettings.skybox != null && !isOverlayCamera)
@@ -280,7 +313,10 @@ namespace UnityEngine.Rendering.Universal
                 EnqueuePass(m_TransparentSettingsPass);
             }
 
-            m_RenderTransparentForwardPass.Setup(m_ColorGradingLut, generateColorGradingLUT);
+            // (ASG) For now, transparent objects are treated as if they are on render layer 1, regardless of the settings.
+            // This avoids having to split out separate render passes for all transparent objects as well.
+            m_RenderTransparentForwardPass.Setup(m_ColorGradingLuts[0], UniversalRenderPipeline.renderLayerStacks[0], generateColorGradingLUT);
+
             EnqueuePass(m_RenderTransparentForwardPass);
             EnqueuePass(m_OnRenderObjectCallbackPass);
 
@@ -302,7 +338,7 @@ namespace UnityEngine.Rendering.Universal
 
                     // if resolving to screen we need to be able to perform sRGBConvertion in post-processing if necessary
                     bool doSRGBConvertion = resolvePostProcessingToCameraTarget;
-                    m_PostProcessPass.Setup(cameraTargetDescriptor, m_ActiveCameraColorAttachment, destination, m_ActiveCameraDepthAttachment, m_ColorGradingLut, applyFinalPostProcessing, doSRGBConvertion);
+                    m_PostProcessPass.Setup(cameraTargetDescriptor, m_ActiveCameraColorAttachment, destination, m_ActiveCameraDepthAttachment, m_ColorGradingLuts[0], applyFinalPostProcessing, doSRGBConvertion);
                     EnqueuePass(m_PostProcessPass);
                 }
 
@@ -343,7 +379,7 @@ namespace UnityEngine.Rendering.Universal
             // stay in RT so we resume rendering on stack after post-processing
             else if (applyPostProcessing)
             {
-                m_PostProcessPass.Setup(cameraTargetDescriptor, m_ActiveCameraColorAttachment, m_AfterPostProcessColor, m_ActiveCameraDepthAttachment, m_ColorGradingLut, false, false);
+                m_PostProcessPass.Setup(cameraTargetDescriptor, m_ActiveCameraColorAttachment, m_AfterPostProcessColor, m_ActiveCameraDepthAttachment, m_ColorGradingLuts[0], false, false);
                 EnqueuePass(m_PostProcessPass);
             }
 

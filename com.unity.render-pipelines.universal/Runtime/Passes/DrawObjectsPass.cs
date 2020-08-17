@@ -30,7 +30,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         static readonly int s_DrawObjectPassDataPropID = Shader.PropertyToID("_DrawObjectPassData");
 
-        public DrawObjectsPass(string profilerTag, bool opaque, RenderPassEvent evt, RenderQueueRange renderQueueRange, LayerMask layerMask, StencilState stencilState, int stencilReference)
+        public DrawObjectsPass(string profilerTag, bool opaque, RenderPassEvent evt, RenderQueueRange renderQueueRange, LayerMask layerMask, uint renderingLayerMask, StencilState stencilState, int stencilReference)
         {
             m_ProfilerTag = profilerTag;
             m_ProfilingSampler = new ProfilingSampler(profilerTag);
@@ -39,7 +39,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_ShaderTagIdList.Add(new ShaderTagId("LightweightForward"));
             renderPassEvent = evt;
 
-            m_FilteringSettings = new FilteringSettings(renderQueueRange, layerMask);
+            m_FilteringSettings = new FilteringSettings(renderQueueRange, layerMask, renderingLayerMask);
             m_RenderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
             m_IsOpaque = opaque;
 
@@ -58,15 +58,15 @@ namespace UnityEngine.Rendering.Universal.Internal
         }
 
         // Sets up the pass to queue up with the color transform
-        public void Setup(in RenderTargetHandle internalLut, bool generatedLutTexture)
+        public void Setup(in RenderTargetHandle internalLut, VolumeStack postProcessingStack, bool generatedLutTexture)
         {
+            // If we didn't generate a lut, then we shouldn't do a color transform. Grading is disabled.
             m_doColorTransform = generatedLutTexture;
 
             m_internalLut = internalLut;
-            var stack = VolumeManager.instance.stack;
-            m_ColorLookup = stack.GetComponent<ColorLookup>();
-            m_ColorAdjustments = stack.GetComponent<ColorAdjustments>();
-            m_Tonemapping = stack.GetComponent<Tonemapping>();
+            m_ColorLookup = postProcessingStack.GetComponent<ColorLookup>();
+            m_ColorAdjustments = postProcessingStack.GetComponent<ColorAdjustments>();
+            m_Tonemapping = postProcessingStack.GetComponent<Tonemapping>();
         }
 
         /// <inheritdoc/>
