@@ -37,7 +37,8 @@ namespace UnityEngine.Rendering.Universal.Internal
             this.destination = destination;
         }
 
-        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor,
+                                       ref RenderingData renderingData)
         {
             var descriptor = cameraTextureDescriptor;
             descriptor.colorFormat = RenderTextureFormat.Depth;

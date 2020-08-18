@@ -546,7 +546,7 @@ namespace UnityEngine.Rendering.Universal
             bool firstTimeStereo = false;
 
             CommandBuffer cmd = CommandBufferPool.Get(k_SetRenderTarget);
-            renderPass.Configure(cmd, cameraData.cameraTargetDescriptor);
+            renderPass.Configure(cmd, cameraData.cameraTargetDescriptor, ref renderingData);
             renderPass.eyeIndex = eyeIndex;
 
             ClearFlag cameraClearFlag = GetCameraClearFlag(ref cameraData);
