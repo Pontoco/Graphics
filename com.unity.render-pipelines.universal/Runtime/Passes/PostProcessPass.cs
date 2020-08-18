@@ -137,7 +137,8 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_EnableSRGBConversionIfNeeded = true;
         }
 
-        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor,
+                                       ref RenderingData renderingData)
         {
             if (m_Destination == RenderTargetHandle.CameraTarget)
                 return;
