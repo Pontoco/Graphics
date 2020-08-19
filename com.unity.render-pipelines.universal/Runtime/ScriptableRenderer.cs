@@ -242,7 +242,7 @@ namespace UnityEngine.Rendering.Universal
             SetCameraRenderState(cmd, ref cameraData);
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
-
+            
             // Sort the render pass queue
             SortStable(m_ActiveRenderPassQueue);
 
