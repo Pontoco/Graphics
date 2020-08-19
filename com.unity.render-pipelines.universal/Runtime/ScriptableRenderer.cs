@@ -242,7 +242,7 @@ namespace UnityEngine.Rendering.Universal
             SetCameraRenderState(cmd, ref cameraData);
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
-            
+
             // Sort the render pass queue
             SortStable(m_ActiveRenderPassQueue);
 
@@ -484,7 +484,7 @@ namespace UnityEngine.Rendering.Universal
             bool firstTimeStereo = false;
 
             CommandBuffer cmd = CommandBufferPool.Get(k_SetRenderTarget);
-            renderPass.Configure(cmd, cameraData.cameraTargetDescriptor, ref renderingData);
+            renderPass.Configure(cmd, cameraData.cameraTargetDescriptor);
             renderPass.eyeIndex = eyeIndex;
 
             ClearFlag cameraClearFlag = GetCameraClearFlag(ref cameraData);

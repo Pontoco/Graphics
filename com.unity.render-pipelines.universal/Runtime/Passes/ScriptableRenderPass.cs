@@ -160,11 +160,9 @@ namespace UnityEngine.Rendering.Universal
         /// </summary>
         /// <param name="cmd">CommandBuffer to enqueue rendering commands. This will be executed by the pipeline.</param>
         /// <param name="cameraTextureDescriptor">Render texture descriptor of the camera render target.</param>
-        /// <param name="renderingData">The rendering data associated with this frame.</param>
         /// <seealso cref="ConfigureTarget"/>
         /// <seealso cref="ConfigureClear"/>
-        public virtual void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor,
-                                      ref RenderingData renderingData)
+        public virtual void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {}
 
         /// <summary>
