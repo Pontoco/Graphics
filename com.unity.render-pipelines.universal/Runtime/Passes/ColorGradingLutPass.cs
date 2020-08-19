@@ -16,6 +16,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         readonly GraphicsFormat m_HdrLutFormat;
         readonly GraphicsFormat m_LdrLutFormat;
 
+        RenderTextureDescriptor lutTextureDescriptor;
         RenderTargetHandle m_InternalLut;
 
         public ColorGradingLutPass(RenderPassEvent evt, PostProcessData data)
@@ -53,9 +54,25 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_LdrLutFormat = GraphicsFormat.R8G8B8A8_UNorm;
         }
 
-        public void Setup(in RenderTargetHandle internalLut)
+        public void Setup(in RenderTargetHandle internalLut, ref RenderingData renderingData)
         {
             m_InternalLut = internalLut;
+
+            ref var postProcessingData = ref renderingData.postProcessingData;
+            bool hdr = postProcessingData.gradingMode == ColorGradingMode.HighDynamicRange;
+            int lutHeight = postProcessingData.lutSize;
+            int lutWidth = lutHeight * lutHeight;
+            var format = hdr ? m_HdrLutFormat : m_LdrLutFormat;
+
+            lutTextureDescriptor = new RenderTextureDescriptor(lutWidth, lutHeight, format, 0);
+            lutTextureDescriptor.vrUsage = VRTextureUsage.None; // We only need one for both eyes in VR
+        }
+
+        /// <inheritdoc />
+        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+        {
+            // Create and set the render target to the LUT texture.
+            cmd.GetTemporaryRT(m_InternalLut.id, lutTextureDescriptor, FilterMode.Bilinear);
 
             // (ASG) This is required, otherwise this pass has the default camera attachment, and the code in
             // ScriptableRenderer.Execute enables XR mode for this pass (when in forward color grading mode).
@@ -85,11 +102,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             // Prepare texture & material
             int lutHeight = postProcessingData.lutSize;
             int lutWidth = lutHeight * lutHeight;
-            var format = hdr ? m_HdrLutFormat : m_LdrLutFormat;
             var material = hdr ? m_LutBuilderHdr : m_LutBuilderLdr;
-            var desc = new RenderTextureDescriptor(lutWidth, lutHeight, format, 0);
-            desc.vrUsage = VRTextureUsage.None; // We only need one for both eyes in VR
-            cmd.GetTemporaryRT(m_InternalLut.id, desc, FilterMode.Bilinear);
 
             // Prepare data
             var lmsColorBalance = ColorUtils.ColorBalanceToLMSCoeffs(whiteBalance.temperature.value, whiteBalance.tint.value);
