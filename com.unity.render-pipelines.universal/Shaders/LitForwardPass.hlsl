@@ -1,6 +1,7 @@
 #ifndef UNIVERSAL_FORWARD_LIT_PASS_INCLUDED
 #define UNIVERSAL_FORWARD_LIT_PASS_INCLUDED
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 // (ASG) Include a few post processing functions from a file. But only the functions.
@@ -151,6 +152,12 @@ half4 LitPassFragment(Varyings input) : SV_Target
 
     color.a = OutputAlpha(color.a);
 
+    // Return linear color. Conversion to sRGB happens automatically through the sRGB target texture format.
+    // If the target does not have sRGB format, sRGB conversion happens during the final blit pass, or post process.
+    
+    // (ASG) Note: sRGB conversion is better to be done automatically hardware, so that filtering / msaa
+    // averaging is done properly in linear space, rather than in sRGB space.
+    
     return color;
 }
 
