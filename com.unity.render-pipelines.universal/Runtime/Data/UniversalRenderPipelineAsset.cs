@@ -122,8 +122,6 @@ namespace UnityEngine.Rendering.Universal
         InForwardPass
     }
 
-    }
-
     public class UniversalRenderPipelineAsset : RenderPipelineAsset, ISerializationCallbackReceiver
     {
         Shader m_DefaultShader;
