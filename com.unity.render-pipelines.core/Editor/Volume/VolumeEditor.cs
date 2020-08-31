@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -9,6 +10,7 @@ namespace UnityEditor.Rendering
     [CustomEditor(typeof(Volume))]
     sealed class VolumeEditor : Editor
     {
+        SerializedProperty m_AffectsRenderLayers;
         SerializedProperty m_IsGlobal;
         SerializedProperty m_BlendRadius;
         SerializedProperty m_Weight;
@@ -26,6 +28,7 @@ namespace UnityEditor.Rendering
         void OnEnable()
         {
             var o = new PropertyFetcher<Volume>(serializedObject);
+            m_AffectsRenderLayers = o.Find(x => x.affectsRenderLayers);
             m_IsGlobal = o.Find(x => x.isGlobal);
             m_BlendRadius = o.Find(x => x.blendDistance);
             m_Weight = o.Find(x => x.weight);
@@ -52,6 +55,24 @@ namespace UnityEditor.Rendering
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+
+            var mask = m_AffectsRenderLayers.intValue;
+            var rect = EditorGUILayout.GetControlRect();
+
+            GUIContent label1 = EditorGUIUtility.TrTextContent("Affect Render Layers", "(ASG) Which render layers this post process volume affects.");
+            EditorGUI.BeginProperty(rect, label1, m_AffectsRenderLayers);
+            EditorGUI.BeginChangeCheck();
+
+            string[] displayedOptions = Enumerable.Range(1, 32).Select(i => $"Layer {i}").ToArray();
+            mask = EditorGUI.MaskField(rect, label1, mask, displayedOptions);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                m_AffectsRenderLayers.intValue = mask;
+            }
+
+            EditorGUI.EndProperty();
+
 
             GUIContent label = EditorGUIUtility.TrTextContent("Mode", "A global volume is applied to the whole scene.");
             Rect lineRect = EditorGUILayout.GetControlRect();
