@@ -249,7 +249,15 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     bool specularHighlightsOff = false;
     #endif
 
-    // Decreases smoothness as the directionality of the light decreases. This approximates the specular highlight
+    BRDFData brdfData;
+
+    // NOTE: can modify alpha
+    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.alpha, brdfData);
+
+// (ASG)
+    BRDFData brdfLightmaps;
+#if defined(LIGHTMAP_ON)
+    // For baked lighting, decrease smoothness as the directionality of the light decreases. This approximates the specular highlight
     // spreading and scattering, as the light becomes less directional. Without this, even shadowed areas look shiny.
     // This is recommended by: https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/gdc2018-precomputedgiobalilluminationinfrostbite.pdf
     // Although, here we do not apply the sqrt to the falloff. Instead we square it, which seems to produce a closer image to the blender groundtruth.
@@ -261,12 +269,13 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     half physicalSmoothness = 1 - PerceptualSmoothnessToRoughness(surfaceData.smoothness);
     half directionality_squared = dot(inputData.bakedGI_directionWS, inputData.bakedGI_directionWS); // The directionality is encoded as the length of the GI direction vector.
     half adjustedSmoothness = physicalSmoothness * RangeRemap(0.0, .9 * .9, directionality_squared);
-    surfaceData.smoothness = 1 - RoughnessToPerceptualRoughness(1 - adjustedSmoothness);
+    half perceptualAdjustedSmoothness = 1 - RoughnessToPerceptualRoughness(1 - adjustedSmoothness);
 
-    BRDFData brdfData;
-
-    // NOTE: can modify "surfaceData"...
-    InitializeBRDFData(surfaceData, brdfData);
+    InitializeBRDFData(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, perceptualAdjustedSmoothness, surfaceData.alpha, brdfLightmaps);
+#else
+    // Don't change smoothness for non-lightmapped objects.
+    brdfLightmaps = brdfData;
+#endif
 
     #if defined(DEBUG_DISPLAY)
     half4 debugColor;
@@ -290,7 +299,7 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     LightingData lightingData = CreateLightingData(inputData, surfaceData);
 
     half3 giDirectionWS = SafeNormalize(inputData.bakedGI_directionWS);
-    lightingData.giColor = GlobalIllumination(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
+    lightingData.giColor = GlobalIllumination(brdfData, brdfLightmaps, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, giDirectionWS, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS);
 
