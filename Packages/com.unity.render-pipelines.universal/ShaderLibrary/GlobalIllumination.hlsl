@@ -279,7 +279,11 @@ half3 GlossyEnvironmentReflection(half3 reflectVector, float3 positionWS, half p
 #endif // _REFLECTION_PROBE_BLENDING
     return irradiance * occlusion;
 #else
-    return _GlossyEnvironmentColor.rgb * occlusion;
+    // (ASG) Disable ambient colored reflection when environment reflections are off. We do this because the ambient environment color comes from the skybox light,
+    // which is completely unsuitable for objects indoor.
+    // (ASG) There should be no environment reflected light on lightmapped objects. It's already included in the bake.
+    return half3(0,0,0);
+    //return _GlossyEnvironmentColor.rgb * occlusion;
 #endif // _ENVIRONMENTREFLECTIONS_OFF
 }
 
@@ -299,7 +303,11 @@ half3 GlossyEnvironmentReflection(half3 reflectVector, half perceptualRoughness,
     return irradiance * occlusion;
 #else
 
-    return _GlossyEnvironmentColor.rgb * occlusion;
+    // (ASG) Disable ambient colored reflection when environment reflections are off. We do this because the ambient environment color comes from the skybox light,
+    // which is completely unsuitable for objects indoor.
+    // (ASG) There should be no environment reflected light on lightmapped objects. It's already included in the bake.
+    return half3(0,0,0);
+    //return _GlossyEnvironmentColor.rgb * occlusion;
 #endif // _ENVIRONMENTREFLECTIONS_OFF
 }
 
@@ -333,7 +341,10 @@ half3 SubtractDirectMainLightFromLightmap(Light mainLight, half3 normalWS, half3
 
 // (ASG) Calculates the GI by treating GI as simply another light source we pass into the DirectBRDF.
 // This gives us nice specular contribution from the baked lights! Very helpful in VR for making an object appear grounded.
-half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
+// Note: brdfDataForLightmaps contains the adjust BRDF used for interpreting the lightmapped lighting. See UniversalFragmentPBR.
+//       We don't want to adjust the brdfData itself, otherwise it will blur metallic reflections based on baked lighting, creating
+//       a 'puddle' effect.
+half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataForLightmaps, BRDFData brdfDataClearCoat, float clearCoatMask,
     half3 bakedGI, half3 bakedGIDirectionWS, half occlusion, float3 positionWS,
     half3 normalWS, half3 viewDirectionWS)
 {
@@ -344,7 +355,14 @@ half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float cl
     half3 indirectDiffuse = bakedGI;
     half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, positionWS, brdfData.perceptualRoughness, 1.0h);
 
-    half3 color = DirectBDRF(brdfData, normalWS, bakedGIDirectionWS, viewDirectionWS) * indirectDiffuse;
+    // (ASG) For objects with lightmaps, calculate the color by treating the GI light and direction as a normal BRDF direct light.
+    // This gives us specular highlights for baked lighting.
+#if defined(LIGHTMAP_ON)
+    half3 color = DirectBDRF(brdfDataForLightmaps, normalWS, bakedGIDirectionWS, viewDirectionWS) * indirectDiffuse; // baked color
+    color += indirectSpecular * EnvironmentBRDFSpecular(brdfData, fresnelTerm);
+#else
+    half3 color = EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+#endif
 
     if (IsOnlyAOLightingFeatureEnabled())
     {
@@ -370,7 +388,7 @@ half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float cl
 half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, float3 positionWS, half3 normalWS, half3 viewDirectionWS)
 {
     const BRDFData noClearCoat = (BRDFData)0;
-    return GlobalIllumination(brdfData, noClearCoat, 0.0, bakedGI, half3(0, 0, 0), occlusion, positionWS, normalWS, viewDirectionWS);
+    return GlobalIllumination(brdfData, brdfData, noClearCoat, 0.0, bakedGI, half3(0, 0, 0), occlusion, positionWS, normalWS, viewDirectionWS);
 }
 
 half3 GlobalIllumination(BRDFData brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
