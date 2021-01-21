@@ -312,7 +312,7 @@ real3 SampleSingleLightmap(TEXTURE2D_LIGHTMAP_PARAM(lightmapTex, lightmapSampler
 void SampleDirectionalLightmap(TEXTURE2D_LIGHTMAP_PARAM(lightmapTex, lightmapSampler), TEXTURE2D_LIGHTMAP_PARAM(lightmapDirTex, lightmapDirSampler), LIGHTMAP_EXTRA_ARGS, float4 transform,
     float3 normalWS, float3 backNormalWS, bool encodedLightmap, real4 decodeInstructions, inout real3 bakeDiffuseLighting, inout real3 backBakeDiffuseLighting)
 {
-     // In directional mode Enlighten bakes dominant light direction
+    // In directional mode Enlighten bakes dominant light direction
     // in a way, that using it for half Lambert and then dividing by a "rebalancing coefficient"
     // gives a result close to plain diffuse response lightmaps, but normalmapped.
 
@@ -335,7 +335,16 @@ void SampleDirectionalLightmap(TEXTURE2D_LIGHTMAP_PARAM(lightmapTex, lightmapSam
         illuminance = SAMPLE_TEXTURE2D_LIGHTMAP(lightmapTex, lightmapSampler, LIGHTMAP_EXTRA_ARGS_USE).rgb;
     }
 
+    // Map [0,1] direction texture sample to [-1,1]
+    real3 lightDirectionWS = (direction.xyz - 0.5) * 2.0;
+
+    real standardLambert = dot(normalWS, lightDirectionWS.xyz);
+
+    // Original Unity formulation. Combines the remapping and lambert into a single step.
+    // Equivalent to:     dot(normalWS, lightDirectionWS) / 2.0 + 0.5;
+    // I think the intention here to is to smooth out the normals a bit so they're not so harsh.
     real halfLambert = dot(normalWS, direction.xyz - 0.5) + 0.5;
+
     bakeDiffuseLighting += illuminance * halfLambert / max(1e-4, direction.w);
 
     real backHalfLambert = dot(backNormalWS, direction.xyz - 0.5) + 0.5;
