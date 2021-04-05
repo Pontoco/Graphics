@@ -98,6 +98,11 @@ Shader "Universal Render Pipeline/Particles/Lit"
             #pragma shader_feature_local _FADING_ON
             #pragma shader_feature_local _DISTORTION_ON
 
+            // (ASG)
+            #pragma multi_compile _ _COLOR_TRANSFORM_IN_FORWARD
+            // If HDR_GRADING is on, then the tonemap algorithm is encoded in the HDR LUT
+            #pragma multi_compile _ _HDR_GRADING _TONEMAP_ACES _TONEMAP_NEUTRAL
+
             // -------------------------------------
             // Universal Pipeline keywords
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS
