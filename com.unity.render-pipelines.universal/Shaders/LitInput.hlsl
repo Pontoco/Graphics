@@ -28,6 +28,7 @@ half _ClearCoatSmoothness;
 half _DetailAlbedoMapScale;
 half _DetailNormalMapScale;
 half _Surface;
+half _GlobalVerticalOffset;
 CBUFFER_END
 
 // (ASG) Used when tonemapping and color grading is done in the forward pass.

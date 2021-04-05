@@ -125,7 +125,7 @@ Varyings LitPassVertex(Attributes input)
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
-    VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
+    VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz + half3(0, _GlobalVerticalOffset, 0));
 
     // normalWS and tangentWS already normalize.
     // this is required to avoid skewing the direction during interpolation
@@ -207,10 +207,10 @@ half4 LitPassFragment(Varyings input) : SV_Target
 
     // Return linear color. Conversion to sRGB happens automatically through the sRGB target texture format.
     // If the target does not have sRGB format, sRGB conversion happens during the final blit pass, or post process.
-    
+
     // (ASG) Note: sRGB conversion is better to be done automatically hardware, so that filtering / msaa
     // averaging is done properly in linear space, rather than in sRGB space.
-    
+
     return color;
 }
 

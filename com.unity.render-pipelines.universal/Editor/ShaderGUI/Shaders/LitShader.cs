@@ -72,6 +72,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             base.DrawSurfaceInputs(material);
             LitGUI.Inputs(litProperties, materialEditor, material);
             DrawEmissionProperties(material, true);
+            materialEditor.ShaderProperty(litProperties.globalVerticalOffset, LitGUI.Styles.globalVerticalOffsetText);
             DrawTileOffset(materialEditor, baseMapProp);
         }
 

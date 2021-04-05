@@ -58,6 +58,8 @@ Shader "Universal Render Pipeline/Lit"
         // Editmode props
         [HideInInspector] _QueueOffset("Queue offset", Float) = 0.0
 
+        _GlobalVerticalOffset("Global Vertical Offset", Range(-1000.0, 1000.0)) = 0.0
+
         // ObsoleteProperties
         [HideInInspector] _MainTex("BaseMap", 2D) = "white" {}
         [HideInInspector] _Color("Base Color", Color) = (1, 1, 1, 1)

@@ -65,6 +65,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             public static GUIContent clearCoatSmoothnessText = new GUIContent("Smoothness",
                 "Specifies the smoothness of the coating." +
                 "\nActs as a multiplier of the clear coat map smoothness value or as a direct smoothness value if no map is specified.");
+
+            public static GUIContent globalVerticalOffsetText = new GUIContent("GlobalVerticalShift", "test");
         }
 
         public struct LitProperties
@@ -95,6 +97,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             public MaterialProperty clearCoatMask;
             public MaterialProperty clearCoatSmoothness;
 
+            public MaterialProperty globalVerticalOffset;
+
             public LitProperties(MaterialProperty[] properties)
             {
                 // Surface Option Props
@@ -120,6 +124,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 clearCoatMap        = BaseShaderGUI.FindProperty("_ClearCoatMap", properties, false);
                 clearCoatMask       = BaseShaderGUI.FindProperty("_ClearCoatMask", properties, false);
                 clearCoatSmoothness = BaseShaderGUI.FindProperty("_ClearCoatSmoothness", properties, false);
+
+                globalVerticalOffset = BaseShaderGUI.FindProperty("_GlobalVerticalOffset", properties, false);
             }
         }
 
