@@ -1,6 +1,7 @@
-// (ASG) Include a few post processing functions from a file. But only the functions.
+﻿// (ASG) Include a few post processing functions from a file. But only the functions.
 #define UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
 #include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/Shaders/Utils/AsgColorPainting.hlsl"
 
 // (ASG) Used when tonemapping and color grading is done in the forward pass.
 #ifdef _COLOR_TRANSFORM_IN_FORWARD
@@ -158,6 +159,9 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 #ifdef _COLOR_TRANSFORM_IN_FORWARD
     color.rgb = ApplyColorGrading(color.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), _UserLut_Params.xyz, _UserLut_Params.w);
 #endif
+
+    // (ASG) After SDR transformation, apply custom vertex painting blend.
+    color.rgb = ApplyVertexColorBlend(color.rgb, SRGBToLinear(unpacked.color));
 
     return color;
 }
