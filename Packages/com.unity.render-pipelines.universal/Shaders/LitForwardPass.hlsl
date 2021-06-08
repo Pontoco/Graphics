@@ -3,6 +3,7 @@
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/Shaders/Utils/AsgColorPainting.hlsl"
 
 // GLES2 has limited amount of interpolators
 #if defined(_PARALLAXMAP) && !defined(SHADER_API_GLES)
@@ -27,6 +28,7 @@ struct Attributes
     float2 texcoord     : TEXCOORD0;
     float2 staticLightmapUV   : TEXCOORD1;
     float2 dynamicLightmapUV  : TEXCOORD2;
+    float4 color        : COLOR0;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -64,6 +66,7 @@ struct Varyings
 #endif
 
     float4 positionCS               : SV_POSITION;
+    float4 color                    : COLOR0;
     UNITY_VERTEX_INPUT_INSTANCE_ID
     UNITY_VERTEX_OUTPUT_STEREO
 };
@@ -211,6 +214,7 @@ Varyings LitPassVertex(Attributes input)
 #endif
 
     output.positionCS = vertexInput.positionCS;
+    output.color = input.color;
 
     return output;
 }
@@ -251,6 +255,9 @@ half4 LitPassFragment(Varyings input) : SV_Target
 #ifdef _COLOR_TRANSFORM_IN_FORWARD
     color.rgb = ApplyColorGrading(color.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), _UserLut_Params.xyz, _UserLut_Params.w);
 #endif
+
+
+    color.rgb = ApplyVertexColorBlend(color.rgb, SRGBToLinear(input.color));
 
     color.a = OutputAlpha(color.a, _Surface);
 

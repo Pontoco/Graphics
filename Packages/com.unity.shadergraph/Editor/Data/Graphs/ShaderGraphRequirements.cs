@@ -179,7 +179,7 @@ namespace UnityEditor.ShaderGraph.Internal
             NeededCoordinateSpace requiresPosition = nodes.OfType<IMayRequirePosition>().Aggregate(NeededCoordinateSpace.None, (mask, node) => mask | node.RequiresPosition(stageCapability));
             NeededCoordinateSpace requiresPredisplacement = nodes.OfType<IMayRequirePositionPredisplacement>().Aggregate(NeededCoordinateSpace.None, (mask, node) => mask | node.RequiresPositionPredisplacement(stageCapability));
             bool requiresScreenPosition = nodes.OfType<IMayRequireScreenPosition>().Any(x => x.RequiresScreenPosition(stageCapability));
-            bool requiresVertexColor = nodes.OfType<IMayRequireVertexColor>().Any(x => x.RequiresVertexColor(stageCapability));
+            bool requiresVertexColor = true; //nodes.OfType<IMayRequireVertexColor>().Any(x => x.RequiresVertexColor(stageCapability)); // (ASG): All shaders use vertex colors, because we allow vertex coloring for painting.
             bool requiresFaceSign = nodes.OfType<IMayRequireFaceSign>().Any(x => x.RequiresFaceSign());
             bool requiresDepthTexture = nodes.OfType<IMayRequireDepthTexture>().Any(x => x.RequiresDepthTexture());
             bool requiresCameraOpaqueTexture = nodes.OfType<IMayRequireCameraOpaqueTexture>().Any(x => x.RequiresCameraOpaqueTexture());
