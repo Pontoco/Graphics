@@ -5,6 +5,9 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Unlit.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+// (ASG) Support fade to black.
+uniform float _FadeToBlack;
+
 struct Attributes
 {
     float4 positionOS : POSITION;
@@ -133,6 +136,9 @@ half4 UnlitPassFragment(Varyings input) : SV_Target
 #endif
 
     finalColor.rgb = MixFog(finalColor.rgb, fogFactor);
+
+    // (ASG) Support fade to black.
+    finalColor.rgb *= _FadeToBlack;
 
     return finalColor;
 }
