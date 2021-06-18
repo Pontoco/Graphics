@@ -250,14 +250,16 @@ half4 LitPassFragment(Varyings input) : SV_Target
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
 
+    color.rgb *= _FadeToBlack; // Fading happens in linear color to fade bright spots last
+
     // (ASG) Add tonemapping and color grading in forward pass.
     // This uses the same color grading function as the post processing shader.
 #ifdef _COLOR_TRANSFORM_IN_FORWARD
     color.rgb = ApplyColorGrading(color.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), _UserLut_Params.xyz, _UserLut_Params.w);
 #endif
 
-
-    color.rgb = ApplyVertexColorBlend(color.rgb, SRGBToLinear(input.color));
+    // Only apply vertex coloring if we're fading to black.
+    color.rgb = lerp(color.rgb, ApplyVertexColorBlend(color.rgb, SRGBToLinear(input.color)), _FadeToBlack);
 
     color.a = OutputAlpha(color.a, _Surface);
 

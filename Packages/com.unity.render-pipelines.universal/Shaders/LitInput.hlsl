@@ -43,6 +43,9 @@ float _TestParam;
 
 #endif
 
+// (ASG) Support fading to black.
+float _FadeToBlack;
+
 // NOTE: Do not ifdef the properties for dots instancing, but ifdef the actual usage.
 // Otherwise you might break CPU-side as property constant-buffer offsets change per variant.
 // NOTE: Dots instancing is orthogonal to the constant buffer above.
