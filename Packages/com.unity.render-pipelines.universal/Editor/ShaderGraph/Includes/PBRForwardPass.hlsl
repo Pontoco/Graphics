@@ -11,9 +11,10 @@ float4 _UserLut_Params;
 TEXTURE2D(_UserLut);
 TEXTURE2D(_InternalLut);
 SAMPLER(sampler_LinearClamp);
-float _TestParam;
 
 #endif
+
+float _FadeToBlack;
 
 void InitializeInputData(Varyings input, SurfaceDescription surfaceDescription, out InputData inputData)
 {
@@ -153,6 +154,7 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
     half4 color = UniversalFragmentPBR(inputData, surface);
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
+    color.rgb *= _FadeToBlack;
 
     // (ASG) Add tonemapping and color grading in forward pass.
     // This uses the same color grading function as the post processing shader.
@@ -161,7 +163,9 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 #endif
 
     // (ASG) After SDR transformation, apply custom vertex painting blend.
-    color.rgb = ApplyVertexColorBlend(color.rgb, SRGBToLinear(unpacked.color));
+    // Only apply vertex coloring if we're fading to black.
+    color.rgb = lerp(color.rgb, ApplyVertexColorBlend(color.rgb, SRGBToLinear(unpacked.color)), _FadeToBlack);
+
 
     return color;
 }
