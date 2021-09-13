@@ -291,10 +291,10 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     half4 shadowMask = CalculateShadowMask(inputData);
     AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, surfaceData);
     uint meshRenderingLayers = GetMeshRenderingLightLayer();
-    Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
+    // Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
 
     // NOTE: We don't apply AO to the GI here because it's done in the lighting calculation below...
-    MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI);
+    // MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI);
 
     LightingData lightingData = CreateLightingData(inputData, surfaceData);
 
@@ -303,13 +303,13 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
                                               inputData.bakedGI, giDirectionWS, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS);
 
-    if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
-    {
-        lightingData.mainLightColor = LightingPhysicallyBased(brdfData, brdfDataClearCoat,
-                                                              mainLight,
-                                                              inputData.normalWS, inputData.viewDirectionWS,
-                                                              surfaceData.clearCoatMask, specularHighlightsOff);
-    }
+    // if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
+    // {
+    //     lightingData.mainLightColor = LightingPhysicallyBased(brdfData, brdfDataClearCoat,
+    //                                                           mainLight,
+    //                                                           inputData.normalWS, inputData.viewDirectionWS,
+    //                                                           surfaceData.clearCoatMask, specularHighlightsOff);
+    // }
 
     #if defined(_ADDITIONAL_LIGHTS)
     uint pixelLightCount = GetAdditionalLightsCount();
