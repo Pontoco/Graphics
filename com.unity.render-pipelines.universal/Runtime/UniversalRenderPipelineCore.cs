@@ -668,6 +668,7 @@ namespace UnityEngine.Rendering.Universal
         // DrawObjectsPass
         DrawOpaqueObjects,
         DrawTransparentObjects,
+        DrawMVOpaqueObjects,
 
         // RenderObjectsPass
         //RenderObjects,
