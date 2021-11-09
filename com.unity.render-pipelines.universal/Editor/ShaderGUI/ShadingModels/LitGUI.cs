@@ -44,6 +44,11 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 new GUIContent("Environment Reflections",
                     "When enabled, the Material samples reflections from the nearest Reflection Probes or Lighting Probe.");
 
+            // (ASG)
+            public static GUIContent realtimeMainLightText =
+                new GUIContent("Real-time Main Light",
+                    "When enabled, real-time main light will be blended with baked lighting.");
+
             public static GUIContent heightMapText = new GUIContent("Height Map",
                 "Specifies the Height Map (G) for this Material.");
 
@@ -89,6 +94,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             // Advanced Props
             public MaterialProperty highlights;
             public MaterialProperty reflections;
+            // (ASG)
+            public MaterialProperty realtimeMainLight;
 
             public MaterialProperty clearCoat;  // Enable/Disable dummy property
             public MaterialProperty clearCoatMap;
@@ -115,6 +122,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 // Advanced Props
                 highlights = BaseShaderGUI.FindProperty("_SpecularHighlights", properties, false);
                 reflections = BaseShaderGUI.FindProperty("_EnvironmentReflections", properties, false);
+                // (ASG)
+                realtimeMainLight = BaseShaderGUI.FindProperty("_RealtimeMainLight", properties, false);
 
                 clearCoat           = BaseShaderGUI.FindProperty("_ClearCoat", properties, false);
                 clearCoatMap        = BaseShaderGUI.FindProperty("_ClearCoatMap", properties, false);
@@ -294,6 +303,10 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             if (material.HasProperty("_EnvironmentReflections"))
                 CoreUtils.SetKeyword(material, "_ENVIRONMENTREFLECTIONS_OFF",
                     material.GetFloat("_EnvironmentReflections") == 0.0f);
+            // (ASG)
+            if (material.HasProperty("_RealtimeMainLight"))
+                CoreUtils.SetKeyword(material, "_REALTIME_MAIN_LIGHT_ON",
+                    material.GetFloat("_RealtimeMainLight") != 0.0f);
             if (material.HasProperty("_OcclusionMap"))
                 CoreUtils.SetKeyword(material, "_OCCLUSIONMAP", material.GetTexture("_OcclusionMap"));
 
