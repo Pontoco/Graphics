@@ -123,6 +123,9 @@ half4 ParticlesLitFragment(VaryingsParticle input) : SV_Target
     half4 color = UniversalFragmentPBR(inputData, surfaceData);
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
 
+    // (ASG) Apply global fade to black.
+    color.rgb *= _FadeToBlack; // Fading happens in linear color to fade bright spots last
+
     // (ASG) Add tonemapping and color grading in forward pass.
     // This uses the same color grading function as the post processing shader.
 #ifdef _COLOR_TRANSFORM_IN_FORWARD

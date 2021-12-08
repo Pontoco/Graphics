@@ -29,9 +29,11 @@ float4 _UserLut_Params;
 TEXTURE2D(_UserLut);
 TEXTURE2D(_InternalLut);
 SAMPLER(sampler_LinearClamp);
-float _TestParam;
 
 #endif
+
+// (ASG) Support fading to black.
+float _FadeToBlack;
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Particles.hlsl"
 
