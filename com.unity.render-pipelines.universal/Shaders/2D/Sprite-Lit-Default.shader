@@ -65,6 +65,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             half4 _MainTex_ST;
             half4 _NormalMap_ST;
 
+            // (ASG) Support fading to black.
+            float _FadeToBlack;
+
             #if USE_SHAPE_LIGHT_TYPE_0
             SHAPE_LIGHT(0)
             #endif
@@ -101,8 +104,12 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             {
                 half4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 half4 mask = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
+                half4 color = CombinedShapeLightShared(main, mask, i.lightingUV);
 
-                return CombinedShapeLightShared(main, mask, i.lightingUV);
+                // (ASG) Apply fade to black.
+                color.rgb *= _FadeToBlack; // Fading happens in linear color to fade bright spots last
+
+                return color;
             }
             ENDHLSL
         }
@@ -194,6 +201,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             SAMPLER(sampler_MainTex);
             float4 _MainTex_ST;
 
+            // (ASG) Support fading to black.
+            float _FadeToBlack;
+
             Varyings UnlitVertex(Attributes attributes)
             {
                 Varyings o = (Varyings)0;
@@ -210,6 +220,10 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             float4 UnlitFragment(Varyings i) : SV_Target
             {
                 float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+
+                // (ASG) Apply fade to black.
+                mainTex.rgb *= _FadeToBlack; // Fading happens in linear color to fade bright spots last
+
                 return mainTex;
             }
             ENDHLSL
