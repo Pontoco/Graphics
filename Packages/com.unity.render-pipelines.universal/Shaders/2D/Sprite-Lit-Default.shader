@@ -68,6 +68,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             float4 _Color;
             half4 _RendererColor;
 
+            // (ASG) Support fading to black.
+            float _FadeToBlack;
+
             #if USE_SHAPE_LIGHT_TYPE_0
             SHAPE_LIGHT(0)
             #endif
@@ -113,7 +116,12 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
                 InitializeSurfaceData(main.rgb, main.a, mask, surfaceData);
                 InitializeInputData(i.uv, i.lightingUV, inputData);
 
-                return CombinedShapeLightShared(surfaceData, inputData);
+                half4 color = CombinedShapeLightShared(surfaceData, inputData);
+
+                // (ASG) Apply fade to black.
+                color.rgb *= _FadeToBlack; // Fading happens in linear color to fade bright spots last
+
+                return color;
             }
             ENDHLSL
         }
@@ -216,6 +224,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             float4 _Color;
             half4 _RendererColor;
 
+            // (ASG) Support fading to black.
+            float _FadeToBlack;
+
             Varyings UnlitVertex(Attributes attributes)
             {
                 Varyings o = (Varyings)0;
@@ -234,6 +245,9 @@ Shader "Universal Render Pipeline/2D/Sprite-Lit-Default"
             float4 UnlitFragment(Varyings i) : SV_Target
             {
                 float4 mainTex = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+
+                // (ASG) Apply fade to black.
+                mainTex.rgb *= _FadeToBlack; // Fading happens in linear color to fade bright spots last
 
                 #if defined(DEBUG_DISPLAY)
                 SurfaceData2D surfaceData;

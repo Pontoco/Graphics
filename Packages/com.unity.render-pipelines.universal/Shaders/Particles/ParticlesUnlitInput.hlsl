@@ -18,6 +18,20 @@ CBUFFER_START(UnityPerMaterial)
     half _Surface;
 CBUFFER_END
 
+// (ASG) Used when tonemapping and color grading is done in the forward pass.
+#ifdef _COLOR_TRANSFORM_IN_FORWARD
+
+float4 _Lut_Params;
+float4 _UserLut_Params;
+TEXTURE2D(_UserLut);
+TEXTURE2D(_InternalLut);
+SAMPLER(sampler_LinearClamp);
+
+#endif
+
+// (ASG) Support fading to black.
+float _FadeToBlack;
+
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Particles.hlsl"
 
 #define SOFT_PARTICLE_NEAR_FADE _SoftParticleFadeParams.x
