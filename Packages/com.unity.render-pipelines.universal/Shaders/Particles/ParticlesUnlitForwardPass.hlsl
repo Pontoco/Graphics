@@ -147,6 +147,15 @@ half4 fragParticleUnlit(VaryingsParticle input) : SV_Target
     finalColor.rgb = MixFog(finalColor.rgb, inputData.fogCoord);
     finalColor.a = OutputAlpha(finalColor.a, _Surface);
 
+    // (ASG) Apply global fade to black.
+    finalColor.rgb *= _FadeToBlack; // Fading happens in linear color to fade bright spots last
+
+    // (ASG) Add tonemapping and color grading in forward pass.
+    // This uses the same color grading function as the post processing shader.
+#ifdef _COLOR_TRANSFORM_IN_FORWARD
+    finalColor.rgb = ApplyColorGrading(finalColor.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), _UserLut_Params.xyz, _UserLut_Params.w);
+#endif
+
     return finalColor;
 }
 
