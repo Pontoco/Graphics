@@ -384,6 +384,31 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             pragmas = CorePragmas.Instanced,
             includes = CoreIncludes.ShadowCaster,
         };
+
+        public static readonly PassDescriptor MotionVectors = new PassDescriptor()
+        {
+            // Definition
+            displayName = "MotionVectors",
+            referenceName = "SHADERPASS_MOTIONVECTORS",
+            lightMode = "MotionVectors",
+
+            // Template
+            passTemplatePath = GenerationUtils.GetDefaultTemplatePath("PassMesh.template"),
+            sharedTemplateDirectories = GenerationUtils.GetDefaultSharedTemplateDirectories(),
+
+            // Port Mask
+            validVertexBlocks = CoreBlockMasks.Vertex,
+
+            // Fields
+            structs = CoreStructCollections.Default,
+            requiredFields = CoreRequiredFields.MotionVectors,
+            fieldDependencies = CoreFieldDependencies.Default,
+
+            // Conditional State
+            renderStates = CoreRenderStates.Default,
+            pragmas = CorePragmas.DOTSInstanced,
+            includes = CoreIncludes.MotionVectors,
+        };
     }
 #endregion
 
@@ -431,6 +456,13 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
         public static readonly FieldCollection ShadowCaster = new FieldCollection()
         {
             StructFields.Attributes.normalOS,
+        };
+
+        public static readonly FieldCollection MotionVectors = new FieldCollection()
+        {
+            StructFields.Attributes.uv4,                   // needed for previousPositionOS
+            UniversalStructFields.Varyings.curPositionCS,
+            UniversalStructFields.Varyings.prevPositionCS,
         };
     }
 #endregion
@@ -609,6 +641,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
         const string kDepthNormalsOnlyPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/DepthNormalsOnlyPass.hlsl";
         const string kShadowCasterPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShadowCasterPass.hlsl";
         const string kTextureStack = "Packages/com.unity.render-pipelines.core/ShaderLibrary/TextureStack.hlsl";
+        const string kMotionVectors = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/OculusMotionVectors.hlsl";
 
         public static readonly IncludeCollection CorePregraph = new IncludeCollection
         {
@@ -661,6 +694,17 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             // Post-graph
             { CorePostgraph },
             { kShadowCasterPass, IncludeLocation.Postgraph },
+        };
+
+        public static readonly IncludeCollection MotionVectors = new IncludeCollection
+        {
+            // Pre-graph
+            { CoreIncludes.CorePregraph },
+            { CoreIncludes.ShaderGraphPregraph },
+
+            // Post-graph
+            { CoreIncludes.CorePostgraph },
+            { kMotionVectors, IncludeLocation.Postgraph },
         };
     }
 #endregion
