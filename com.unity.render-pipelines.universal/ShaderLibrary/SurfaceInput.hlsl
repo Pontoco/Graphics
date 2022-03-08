@@ -21,9 +21,9 @@ half Alpha(half albedoAlpha, half4 color, half cutoff)
     half alpha = color.a;
 #endif
 
-#if defined(_ALPHATEST_ON)
-    clip(alpha - cutoff);
-#endif
+// #if defined(_ALPHATEST_ON)
+//     clip(alpha - cutoff);
+// #endif
 
     return alpha;
 }
