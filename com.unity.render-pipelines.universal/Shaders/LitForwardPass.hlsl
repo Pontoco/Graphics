@@ -209,10 +209,10 @@ half4 LitPassFragment(Varyings input) : SV_Target
 
     // Return linear color. Conversion to sRGB happens automatically through the sRGB target texture format.
     // If the target does not have sRGB format, sRGB conversion happens during the final blit pass, or post process.
-    
+
     // (ASG) Note: sRGB conversion is better to be done automatically hardware, so that filtering / msaa
     // averaging is done properly in linear space, rather than in sRGB space.
-    
+
     return color;
 }
 

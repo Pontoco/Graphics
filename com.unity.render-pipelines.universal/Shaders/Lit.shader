@@ -90,6 +90,9 @@ Shader "Universal Render Pipeline/Lit"
             Name "ForwardLit"
             Tags{"LightMode" = "UniversalForward"}
 
+            // (ASG) Enable AlphaToMask when _AlphaClip (set by material) is on.
+            AlphaToMask[_AlphaClip]
+
             Blend[_SrcBlend][_DstBlend]
             ZWrite[_ZWrite]
             Cull[_Cull]
@@ -374,6 +377,9 @@ Shader "Universal Render Pipeline/Lit"
             // no LightMode tag are also rendered by Universal Render Pipeline
             Name "ForwardLit"
             Tags{"LightMode" = "UniversalForward"}
+
+            // (ASG) Enable AlphaToMask when _AlphaClip (set by material) is on.
+            AlphaToMask[_AlphaClip]
 
             Blend[_SrcBlend][_DstBlend]
             ZWrite[_ZWrite]

@@ -21,9 +21,11 @@ half Alpha(half albedoAlpha, half4 color, half cutoff)
     half alpha = color.a;
 #endif
 
-// #if defined(_ALPHATEST_ON)
-//     clip(alpha - cutoff);
-// #endif
+#if defined(_ALPHATEST_ON)
+    // (ASG) Sharpen alpha boundary using technique from:
+    // https://bgolus.medium.com/anti-aliased-alpha-test-the-esoteric-alpha-to-coverage-8b177335ae4f
+    alpha = (alpha - cutoff) / max(fwidth(alpha), 0.0001) + 0.5;
+#endif
 
     return alpha;
 }

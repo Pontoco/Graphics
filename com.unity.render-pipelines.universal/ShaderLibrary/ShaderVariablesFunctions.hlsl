@@ -139,7 +139,12 @@ void AlphaDiscard(real alpha, real cutoff, real offset = 0.0h)
 
 half OutputAlpha(half outputAlpha, half surfaceType = 0.0)
 {
-    return surfaceType == 1 ? outputAlpha : 1.0;
+    // (ASG) Added first branch for alpha-to-coverage.
+    #ifdef _ALPHATEST_ON
+        return outputAlpha;
+    #else
+        return surfaceType == 1 ? outputAlpha : 1.0;
+    #endif
 }
 
 // A word on normalization of normals:
