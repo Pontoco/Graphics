@@ -34,8 +34,6 @@ CBUFFER_END
 #ifdef _COLOR_TRANSFORM_IN_FORWARD
 
 float4 _Lut_Params;
-float4 _UserLut_Params;
-TEXTURE2D(_UserLut);
 TEXTURE2D(_InternalLut);
 SAMPLER(sampler_LinearClamp);
 float _TestParam;

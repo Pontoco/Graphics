@@ -2,7 +2,7 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
 {
     HLSLINCLUDE
         #pragma exclude_renderers gles
-	
+
         // (ASG)
         #pragma multi_compile _ _COLOR_TRANSFORM_IN_FORWARD
         #pragma multi_compile_local_fragment _ _DISTORTION
@@ -32,7 +32,6 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
         TEXTURE2D(_LensDirt_Texture);
         TEXTURE2D(_Grain_Texture);
         TEXTURE2D(_InternalLut);
-        TEXTURE2D(_UserLut);
         TEXTURE2D(_BlueNoise_Texture);
 
         float4 _Lut_Params;
@@ -75,8 +74,6 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
 
         #define LutParams               _Lut_Params.xyz
         #define PostExposure            _Lut_Params.w
-        #define UserLutParams           _UserLut_Params.xyz
-        #define UserLutContribution     _UserLut_Params.w
 
         #define GrainIntensity          _Grain_Params.x
         #define GrainResponse           _Grain_Params.y
@@ -198,7 +195,7 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
             #if !_COLOR_TRANSFORM_IN_FORWARD
             {
                 // (ASG) Color grading does not have a specific keyword toggle. It's always on, unless it's been moved to the forward pass.
-                color = ApplyColorGrading(color, PostExposure, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), LutParams, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), UserLutParams, UserLutContribution);
+                color = ApplyColorGrading(color, PostExposure, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), LutParams);
             }
             #endif
 
