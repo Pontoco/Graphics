@@ -129,7 +129,7 @@ half4 ParticlesLitFragment(VaryingsParticle input) : SV_Target
     // (ASG) Add tonemapping and color grading in forward pass.
     // This uses the same color grading function as the post processing shader.
 #ifdef _COLOR_TRANSFORM_IN_FORWARD
-    color.rgb = ApplyColorGrading(color.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz, TEXTURE2D_ARGS(_UserLut, sampler_LinearClamp), _UserLut_Params.xyz, _UserLut_Params.w);
+    color.rgb = ApplyColorGrading(color.rgb, _Lut_Params.w, TEXTURE2D_ARGS(_InternalLut, sampler_LinearClamp), _Lut_Params.xyz);
 #endif
 
     color.a = OutputAlpha(color.a, _Surface);
