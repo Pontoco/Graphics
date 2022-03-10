@@ -4,9 +4,10 @@
 #include "Packages/com.unity.render-pipelines.universal/Shaders/Particles/ParticlesInput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Particles.hlsl"
 
-#ifdef _ALPHATEST_ON
-half _Cutoff;
-#endif
+// (ASG) Removed to prevent redefinition of _Cutoff. Original definition in ParticlesLit.shader:10
+// #ifdef _ALPHATEST_ON
+// half _Cutoff;
+// #endif
 
 float _ObjectId;
 float _PassValue;
