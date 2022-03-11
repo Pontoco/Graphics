@@ -89,27 +89,33 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 
     inputData.fogCoord = input.fogFactorAndVertexLight.x;
     inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
-    inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.vertexSH, inputData.normalWS);
+    // inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.vertexSH, inputData.normalWS); // (ASG) moved below.
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.lightmapUV);
 
-    // Get the direction of the lightmap lighting (scale is equal to the 'directionality')
-    #ifdef LIGHTMAP_ON
+
+#if defined(LIGHTMAP_ON)
+    // (ASG) This is an 'inlined' version of SampleLightmap() that removes some unnecessary branching, computation, and
+    // texture samples. We assume that 1. directional lightmaps are in use, and 2. lightmaps are RGBM encoded.
 
     half2 uv = input.lightmapUV;
 
-    // TODO(fixforship): This adds an *additional* unnecessary texture fetch to the shader. We're already sampling
-    // the directional lightmap in the SAMPLE_GI function, so we should sample it first, and feed it
-    // in, instead.
+    // Get the baked illuminance.
+    half4 decodeInstructions = half4(LIGHTMAP_HDR_MULTIPLIER, LIGHTMAP_HDR_EXPONENT, 0.0h, 0.0h);
+    real4 encodedIlluminance = SAMPLE_TEXTURE2D(unity_Lightmap, samplerunity_Lightmap, uv);
+    inputData.bakedGI = DecodeLightmap(encodedIlluminance, decodeInstructions);
+
+    // Get the direction of the lightmap lighting (scale is equal to the 'directionality')
     real4 direction_raw = SAMPLE_TEXTURE2D(unity_LightmapInd, samplerunity_Lightmap, uv);
     half3 direction = (direction_raw.xyz - 0.5) * 2; // convert from [0,1] to [-1,1]
     inputData.bakedGI_directionWS = direction;
 
-    #else // LIGHTMAP_ON
+#else // LIGHTMAP_ON
 
+    inputData.bakedGI = SampleSHPixel(input.vertexSH, inputData.normalWS);
     inputData.bakedGI_directionWS = half3(0,0,0);
 
-    #endif
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
