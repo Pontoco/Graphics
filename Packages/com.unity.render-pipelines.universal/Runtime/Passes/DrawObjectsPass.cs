@@ -88,9 +88,9 @@ namespace UnityEngine.Rendering.Universal.Internal
         }
 
         // Sets up the pass to queue up with the color transform
-        public void Setup(in RenderTargetHandle internalLut, bool generatedLutTexture)
+        public void Setup(in RenderTargetHandle internalLut, bool doColorTransform)
         {
-            m_doColorTransform = generatedLutTexture;
+            m_doColorTransform = doColorTransform;
 
             m_internalLut = internalLut;
             var stack = VolumeManager.instance.stack;

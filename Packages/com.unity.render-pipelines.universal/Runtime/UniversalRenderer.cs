@@ -721,7 +721,7 @@ namespace UnityEngine.Rendering.Universal
 
             if (generateColorGradingLUT)
             {
-                colorGradingLutPass.Setup(colorGradingLut, ref renderingData);
+                m_PostProcessPasses.SetupColorGradingLutPass(ref renderingData);
                 EnqueuePass(colorGradingLutPass);
             }
 
