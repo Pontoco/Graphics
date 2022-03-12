@@ -229,7 +229,11 @@ inline void InitializeStandardLitSurfaceData(float2 uv, out SurfaceData outSurfa
 
     outSurfaceData.smoothness = specGloss.a;
     outSurfaceData.normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
+#if defined(_OCCLUSION_MAP_COMBINED_ON) // (ASG) Added alternate implementation of SampleOcclusion().
+    outSurfaceData.occlusion = LerpWhiteTo(specGloss.g, _OcclusionStrength);
+#else
     outSurfaceData.occlusion = SampleOcclusion(uv);
+#endif
     outSurfaceData.emission = SampleEmission(uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
 
 #if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)

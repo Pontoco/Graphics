@@ -44,11 +44,6 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 new GUIContent("Environment Reflections",
                     "When enabled, the Material samples reflections from the nearest Reflection Probes or Lighting Probe.");
 
-            // (ASG)
-            public static GUIContent realtimeMainLightText =
-                new GUIContent("Real-time Main Light",
-                    "When enabled, real-time main light will be blended with baked lighting.");
-
             public static GUIContent heightMapText = new GUIContent("Height Map",
                 "Specifies the Height Map (G) for this Material.");
 
@@ -70,6 +65,15 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             public static GUIContent clearCoatSmoothnessText = new GUIContent("Smoothness",
                 "Specifies the smoothness of the coating." +
                 "\nActs as a multiplier of the clear coat map smoothness value or as a direct smoothness value if no map is specified.");
+
+            // (ASG)
+            public static GUIContent realtimeMainLightText = new GUIContent("Real-time Main Light",
+                    "When enabled, real-time main light will be blended with baked lighting.");
+
+            public static GUIContent occlusionCombinedText = new GUIContent("Occlusion Map Combined",
+                "Use the green channel of the Metallic Map as Occlusion.");
+
+            public static GUIContent occlusionStrengthText = new GUIContent("Strength");
         }
 
         public struct LitProperties
@@ -96,6 +100,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             public MaterialProperty reflections;
             // (ASG)
             public MaterialProperty realtimeMainLight;
+            public MaterialProperty occlusionMapCombined;
 
             public MaterialProperty clearCoat;  // Enable/Disable dummy property
             public MaterialProperty clearCoatMap;
@@ -124,6 +129,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
                 reflections = BaseShaderGUI.FindProperty("_EnvironmentReflections", properties, false);
                 // (ASG)
                 realtimeMainLight = BaseShaderGUI.FindProperty("_RealtimeMainLight", properties, false);
+                occlusionMapCombined = BaseShaderGUI.FindProperty("_OcclusionMapCombined", properties, false);
 
                 clearCoat           = BaseShaderGUI.FindProperty("_ClearCoat", properties, false);
                 clearCoatMap        = BaseShaderGUI.FindProperty("_ClearCoatMap", properties, false);
@@ -140,7 +146,21 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             if (HeightmapAvailable(material))
                 DoHeightmapArea(properties, materialEditor);
 
-            if (properties.occlusionMap != null)
+            // (ASG) Added path for combined occlusion map.
+            bool occlusionCombined = false;
+            if (properties.occlusionMapCombined != null)
+            {
+                materialEditor.ShaderProperty(properties.occlusionMapCombined, Styles.occlusionCombinedText);
+                occlusionCombined = properties.occlusionMapCombined.floatValue > 0;
+            }
+
+            if (occlusionCombined)
+            {
+                EditorGUI.indentLevel++;
+                materialEditor.ShaderProperty(properties.occlusionStrength, Styles.occlusionStrengthText);
+                EditorGUI.indentLevel--;
+            }
+            else if (properties.occlusionMap != null)
             {
                 materialEditor.TexturePropertySingleLine(Styles.occlusionText, properties.occlusionMap,
                     properties.occlusionMap.textureValue != null ? properties.occlusionStrength : null);
@@ -303,10 +323,15 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
             if (material.HasProperty("_EnvironmentReflections"))
                 CoreUtils.SetKeyword(material, "_ENVIRONMENTREFLECTIONS_OFF",
                     material.GetFloat("_EnvironmentReflections") == 0.0f);
+
             // (ASG)
             if (material.HasProperty("_RealtimeMainLight"))
                 CoreUtils.SetKeyword(material, "_REALTIME_MAIN_LIGHT_ON",
                     material.GetFloat("_RealtimeMainLight") != 0.0f);
+            if (material.HasProperty("_OcclusionMapCombined"))
+                CoreUtils.SetKeyword(material, "_OCCLUSION_MAP_COMBINED_ON",
+                    material.GetFloat("_OcclusionMapCombined") != 0.0f);
+
             if (material.HasProperty("_OcclusionMap"))
                 CoreUtils.SetKeyword(material, "_OCCLUSIONMAP", material.GetTexture("_OcclusionMap"));
 
