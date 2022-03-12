@@ -60,6 +60,24 @@ namespace UnityEngine.Rendering
         }
 
         /// <summary>
+        /// A custom hashing function that Unity uses to compare the state of parameters.
+        /// </summary>
+        /// <returns>A computed hash code for the current instance.</returns>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                foreach (var component in VolumeManager.instance.stack.components.Values)
+                {
+                    hash = hash * 23 + component.GetHashCode();
+                }
+
+                return hash;
+            }
+        }
+
+        /// <summary>
         /// Cleans up the content of this stack. Once a <c>VolumeStack</c> is disposed, it souldn't
         /// be used anymore.
         /// </summary>

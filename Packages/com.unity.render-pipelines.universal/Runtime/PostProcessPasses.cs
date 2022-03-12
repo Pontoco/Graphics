@@ -83,6 +83,12 @@ namespace UnityEngine.Rendering.Universal
             }
         }
 
+        // (ASG) Added a wrapper to allow setting m_ColorGradingLut.
+        public void SetupColorGradingLutPass(ref RenderingData renderingData)
+        {
+            m_ColorGradingLutPass.Setup(out m_ColorGradingLut, ref renderingData);
+        }
+
         public void Dispose()
         {
             // always dispose unmanaged resources
