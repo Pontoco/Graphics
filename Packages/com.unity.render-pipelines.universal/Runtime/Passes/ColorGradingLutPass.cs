@@ -80,7 +80,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             // If the render texture description for the lut has changed, recreate it.
             // This might happen if you change the LWRP settings.
             if (lutWidth != lutTextureDescriptor.width || lutHeight != lutTextureDescriptor.height ||
-                format != lutTextureDescriptor.graphicsFormat)
+                format != lutTextureDescriptor.graphicsFormat || lutTexture == null)
             {
                 lutTextureDescriptor = new RenderTextureDescriptor(lutWidth, lutHeight, format, 0);
                 lutTextureDescriptor.vrUsage = VRTextureUsage.None; // We only need one for both eyes in VR
