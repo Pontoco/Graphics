@@ -241,6 +241,10 @@ namespace UnityEngine.Rendering
 
         internal void UpdateActions()
         {
+            if (m_DebugActions == null)
+            {
+                return;
+            }
             for (int actionIndex = 0; actionIndex < m_DebugActions.Length; ++actionIndex)
             {
                 UpdateAction(actionIndex);
