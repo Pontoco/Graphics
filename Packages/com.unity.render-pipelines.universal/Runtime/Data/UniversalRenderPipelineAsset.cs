@@ -111,7 +111,7 @@ namespace UnityEngine.Rendering.Universal
         LowDynamicRange,
         HighDynamicRange
 	}
-	
+
     // (ASG)
     /// <summary>
     /// Where to do tone-mapping and color grading.
