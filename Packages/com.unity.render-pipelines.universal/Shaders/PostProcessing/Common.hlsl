@@ -181,6 +181,8 @@ half3 ApplyDithering(half3 input, float2 uv, TEXTURE2D_PARAM(BlueNoiseTexture, B
     return input;
 }
 
+#ifndef UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
+
 #define FXAA_SPAN_MAX   (8.0)
 #define FXAA_REDUCE_MUL (1.0 / 8.0)
 #define FXAA_REDUCE_MIN (1.0 / 128.0)
@@ -252,5 +254,7 @@ half3 ApplyFXAA(half3 color, float2 positionNDC, int2 positionSS, float4 sourceS
 
     return ((lumaB < lumaMin) || (lumaB > lumaMax)) ? rgbA : rgbB;
 }
+
+#endif // UNIVERSAL_POSTPROCESSING_COMMON_ONLY_INCLUDE_UTILS
 
 #endif // UNIVERSAL_POSTPROCESSING_COMMON_INCLUDED
