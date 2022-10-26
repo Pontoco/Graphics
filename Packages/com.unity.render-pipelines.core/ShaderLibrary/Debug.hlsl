@@ -322,8 +322,8 @@ real3 GetColorCodeFunction(real value, real4 threshold)
 // 3 color bands: Red, Black, Green
 half4 HeatMapColorRedBlackGreen(half value, half minValue, half maxValue)
 {
-    #define HEATMAP_COLORS_COUNT 3
-    half4 colors[HEATMAP_COLORS_COUNT] =
+    const int heatmap_colors_count = 3;
+    const half4 colors[heatmap_colors_count] =
     {
         // min value of the range
         //half4(0.32, 0.00, 0.32, 1.00),
@@ -337,9 +337,9 @@ half4 HeatMapColorRedBlackGreen(half value, half minValue, half maxValue)
         half4(0, 1, 0, 1)
         // max value of the range
     };
-    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
-    half indexMin=floor(ratio);
-    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+    const half ratio=(heatmap_colors_count-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    const half indexMin=floor(ratio);
+    const half indexMax=min(indexMin+1,heatmap_colors_count-1);
 
     return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
 }
@@ -348,8 +348,8 @@ half4 HeatMapColorRedBlackGreen(half value, half minValue, half maxValue)
 // 3 color bands: Red, Black, White
 half4 HeatMapColorRedBlackWhite(half value, half minValue, half maxValue)
 {
-    #define HEATMAP_COLORS_COUNT 3
-    half4 colors[HEATMAP_COLORS_COUNT] =
+    const int heatmap_colors_count = 3;
+    const half4 colors[heatmap_colors_count] =
     {
         // min value of the range
         //half4(0.32, 0.00, 0.32, 1.00),
@@ -363,9 +363,9 @@ half4 HeatMapColorRedBlackWhite(half value, half minValue, half maxValue)
         half4(1, 1, 1, 1)
         // max value of the range
     };
-    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
-    half indexMin=floor(ratio);
-    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+    const half ratio=(heatmap_colors_count-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    const half indexMin=floor(ratio);
+    const half indexMax=min(indexMin+1,heatmap_colors_count-1);
 
     return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
 }
@@ -374,8 +374,8 @@ half4 HeatMapColorRedBlackWhite(half value, half minValue, half maxValue)
 // 2 color bands: Red, Black, White
 half4 HeatMapColorBlackWhite(half value, half minValue, half maxValue)
 {
-    #define HEATMAP_COLORS_COUNT 2
-    half4 colors[HEATMAP_COLORS_COUNT] =
+    const int heatmap_colors_count = 2;
+    const half4 colors[heatmap_colors_count] =
     {
         // min value of the range
         //half4(0.32, 0.00, 0.32, 1.00),
@@ -388,9 +388,9 @@ half4 HeatMapColorBlackWhite(half value, half minValue, half maxValue)
         half4(1, 1, 1, 1)
         // max value of the range
     };
-    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
-    half indexMin=floor(ratio);
-    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+    const half ratio=(heatmap_colors_count-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    const half indexMin=floor(ratio);
+    const half indexMax=min(indexMin+1,heatmap_colors_count-1);
 
     return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
 }
@@ -399,8 +399,8 @@ half4 HeatMapColorBlackWhite(half value, half minValue, half maxValue)
 // 6 color bands
 half4 HeatMapColorMulticolor(half value, half minValue, half maxValue)
 {
-    #define HEATMAP_COLORS_COUNT 6
-    half4 colors[HEATMAP_COLORS_COUNT] =
+    const int heatmap_colors_count = 6;
+    const half4 colors[heatmap_colors_count] =
     {
         // min value of the range
         half4(0.32, 0.00, 0.32, 1.00),
@@ -411,9 +411,9 @@ half4 HeatMapColorMulticolor(half value, half minValue, half maxValue)
         half4(1.00, 0.00, 0.00, 1.00),
         // max value of the range
     };
-    half ratio=(HEATMAP_COLORS_COUNT-1.0)*saturate((value-minValue)/(maxValue-minValue));
-    half indexMin=floor(ratio);
-    half indexMax=min(indexMin+1,HEATMAP_COLORS_COUNT-1);
+    const half ratio=(heatmap_colors_count-1.0)*saturate((value-minValue)/(maxValue-minValue));
+    const half indexMin=floor(ratio);
+    const half indexMax=min(indexMin+1,heatmap_colors_count-1);
 
     return lerp(colors[indexMin], colors[indexMax], ratio-indexMin);
 }
