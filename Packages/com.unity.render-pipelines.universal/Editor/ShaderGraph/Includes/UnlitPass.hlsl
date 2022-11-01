@@ -1,6 +1,9 @@
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Unlit.hlsl"
 
+// (ASG) Support fade to black.
+uniform float _FadeToBlack;
+
 void InitializeInputData(Varyings input, out InputData inputData)
 {
     inputData = (InputData)0;
@@ -55,6 +58,9 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
     InitializeInputData(unpacked, inputData);
     // TODO: Mip debug modes would require this, open question how to do this on ShaderGraph.
     //SETUP_DEBUG_TEXTURE_DATA(inputData, input.texCoord1, _MainTex);
+
+    // (ASG) Support fade to black.
+    surfaceDescription.BaseColor.rgb *= _FadeToBlack;
 
     half4 finalColor = UniversalFragmentUnlit(inputData, surfaceDescription.BaseColor, alpha);
 
