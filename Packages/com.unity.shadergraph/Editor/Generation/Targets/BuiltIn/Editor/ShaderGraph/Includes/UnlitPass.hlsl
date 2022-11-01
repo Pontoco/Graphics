@@ -6,9 +6,6 @@ PackedVaryings vert(Attributes input)
     return packedOutput;
 }
 
-// (ASG) Support fade to black.
-uniform float _FadeToBlack;
-
 half4 frag(PackedVaryings packedInput) : SV_TARGET
 {
     Varyings unpacked = UnpackVaryings(packedInput);
@@ -30,9 +27,6 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 #ifdef _ALPHAPREMULTIPLY_ON
     surfaceDescription.BaseColor *= alpha;
 #endif
-
-    // (ASG) Support fade to black.
-    surfaceDescription.BaseColor.rgb *= _FadeToBlack;
 
     return half4(surfaceDescription.BaseColor, alpha);
 }
