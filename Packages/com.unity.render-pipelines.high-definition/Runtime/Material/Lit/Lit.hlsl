@@ -2011,12 +2011,12 @@ IndirectLighting EvaluateBSDF_ScreenspaceRefraction(LightLoopContext lightLoopCo
     float2 samplingPositionNDC = lerp(posInput.positionNDC, hit.positionNDC, refractionOffsetMultiplier);
     float2 samplingUV = samplingPositionNDC * _RTHandleScaleHistory.xy;
     float mipLevel = preLightData.transparentSSMipLevel;
-    
+
     // Clamp to avoid potential leaks around the edges when the dynamic resolution is set to low and the smoothness too.
     float2 diffLimit = _ColorPyramidUvScaleAndLimitPrevFrame.xy - _ColorPyramidUvScaleAndLimitPrevFrame.zw;
     float2 diffLimitMipAdjusted = diffLimit * pow(2.0,2.0 + ceil(abs(mipLevel)));
     float2 limit = _ColorPyramidUvScaleAndLimitPrevFrame.xy - diffLimitMipAdjusted;
-    
+
     samplingUV.xy = min(samplingUV.xy, limit);
 
     float3 preLD = SAMPLE_TEXTURE2D_X_LOD(_ColorPyramidTexture, s_trilinear_clamp_sampler, samplingUV, mipLevel).rgb;
@@ -2199,10 +2199,19 @@ void PostEvaluateBSDF(  LightLoopContext lightLoopContext,
     // Subsurface scattering mode
     float3 modifiedDiffuseColor = GetModifiedDiffuseColorForSSS(bsdfData);
 
+    // Pontoco
+    // Calculate a 'emissive mask' which is 1 where there is light greater than the exposure level, and 0 in full shadow.
+    // We use this mask to apply the emissive texture, so that we can add texture in the shadows.
+    float exposedLum = ConvertEvToLuminance(LOAD_TEXTURE2D(_ExposureTexture, int2(0, 0)).y);
+    float lum = Luminance(modifiedDiffuseColor * lighting.direct.diffuse + builtinData.bakeDiffuseLighting);
+    float mask = smoothstep(0, exposedLum * 1.01, lum);
+    lightLoopOutput.diffuseLighting = lerp(modifiedDiffuseColor * lighting.direct.diffuse + builtinData.bakeDiffuseLighting, builtinData.emissiveColor * exposedLum, 1-mask);
+
+    // Pontoco: Old diffuse lighting code. We leave specular untouched, although we may want to include that in the luminance calculation.
     // Apply the albedo to the direct diffuse lighting (only once). The indirect (baked)
     // diffuse lighting has already multiply the albedo in ModifyBakedDiffuseLighting().
     // Note: In deferred bakeDiffuseLighting also contain emissive and in this case emissiveColor is 0
-    lightLoopOutput.diffuseLighting = modifiedDiffuseColor * lighting.direct.diffuse + builtinData.bakeDiffuseLighting + builtinData.emissiveColor;
+    // lightLoopOutput.diffuseLighting = modifiedDiffuseColor * lighting.direct.diffuse + builtinData.bakeDiffuseLighting + builtinData.emissiveColor;
 
     // If refraction is enable we use the transmittanceMask to lerp between current diffuse lighting and refraction value
     // Physically speaking, transmittanceMask should be 1, but for artistic reasons, we let the value vary
