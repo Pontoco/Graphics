@@ -461,6 +461,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         replaceBakeDiffuseLighting = false;
 #endif
 
+        bool useReflectionProbesForDiffuse = false;
         if (replaceBakeDiffuseLighting)
         {
             BuiltinData tempBuiltinData;
@@ -513,8 +514,12 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                 }
                 else // If probe volume is disabled we fallback on the ambient probes
                 {
-                    tempBuiltinData.bakeDiffuseLighting = EvaluateAmbientProbe(bsdfData.normalWS);
-                    tempBuiltinData.backBakeDiffuseLighting = EvaluateAmbientProbe(-bsdfData.normalWS);
+                    // tempBuiltinData.bakeDiffuseLighting = EvaluateAmbientProbe(bsdfData.normalWS);
+                    // tempBuiltinData.backBakeDiffuseLighting = EvaluateAmbientProbe(-bsdfData.normalWS);
+
+                    // Clear the baked data, in preparation for using the reflection probes instead.
+                    tempBuiltinData.bakeDiffuseLighting = float3(0,0,0);
+                    useReflectionProbesForDiffuse = true;
                 }
 #endif
             }
@@ -590,6 +595,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                     {
                         if (IsMatchingLightLayer(s_envLightData.lightLayers, builtinData.renderingLayers))
                         {
+                            float oldReflectionHierarchy = reflectionHierarchyWeight;
                             IndirectLighting lighting = EvaluateBSDF_Env(context, V, posInput, preLightData, s_envLightData, bsdfData, s_envLightData.influenceShapeType, GPUIMAGEBASEDLIGHTINGTYPE_REFLECTION, reflectionHierarchyWeight);
 #if defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2)
 
@@ -601,6 +607,12 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
 #endif
 
                             AccumulateIndirectLighting(lighting, aggregateLighting);
+
+                            if (useReflectionProbesForDiffuse) {
+                                float weight = reflectionHierarchyWeight - oldReflectionHierarchy;
+                                float4 env = SampleEnv(context, s_envLightData.envIndex, bsdfData.normalWS, 4, 1, 0.5);
+                                builtinData.bakeDiffuseLighting += weight * env.rgb;
+                            }
                         }
                     }
                     // Refraction probe and reflection probe will process exactly the same weight. It will be good for performance to be able to share this computation
@@ -613,8 +625,37 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                         EVALUATE_BSDF_ENV(s_envLightData, REFRACTION, refraction);
                     }
                 }
-
             }
+        }
+
+        // As a final fallback, apply the ambient probe SH for the sky
+        if (useReflectionProbesForDiffuse) {
+            if (reflectionHierarchyWeight < 1.0) {
+                builtinData.bakeDiffuseLighting += (1 - reflectionHierarchyWeight) * EvaluateAmbientProbe(bsdfData.normalWS);
+                builtinData.backBakeDiffuseLighting += (1 - reflectionHierarchyWeight) * EvaluateAmbientProbe(-bsdfData.normalWS);
+            }
+
+            // (PON) This is a duplicate of above. We need to re-finalize the baked lighting here if we're using
+            // reflection probe baked lighting.
+            #ifdef MODIFY_BAKED_DIFFUSE_LIGHTING
+            #ifdef DEBUG_DISPLAY
+            // When the lux meter is enabled, we don't want the albedo of the material to modify the diffuse baked lighting
+            if (_DebugLightingMode != DEBUGLIGHTINGMODE_LUX_METER)
+                #endif
+                ModifyBakedDiffuseLighting(V, posInput, preLightData, bsdfData, builtinData);
+            #endif
+            // This is applied only on bakeDiffuseLighting as ModifyBakedDiffuseLighting combine both bakeDiffuseLighting and backBakeDiffuseLighting
+            builtinData.bakeDiffuseLighting *= GetIndirectDiffuseMultiplier(builtinData.renderingLayers);
+
+            ApplyDebugToBuiltinData(builtinData); // This will not affect emissive as we don't use it
+
+            #if defined(DEBUG_DISPLAY) && (SHADERPASS == SHADERPASS_DEFERRED_LIGHTING)
+            // We need to handle the specific case of deferred for debug lighting mode here
+            if (_DebugLightingMode == DEBUGLIGHTINGMODE_EMISSIVE_LIGHTING)
+            {
+                builtinData.bakeDiffuseLighting = real3(0.0, 0.0, 0.0);
+            }
+            #endif
         }
 
         // Only apply the sky IBL if the sky texture is available
@@ -637,6 +678,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                 EVALUATE_BSDF_ENV_SKY(envLightSky, REFRACTION, refraction);
             }
         }
+
     }
 #undef EVALUATE_BSDF_ENV
 #undef EVALUATE_BSDF_ENV_SKY
