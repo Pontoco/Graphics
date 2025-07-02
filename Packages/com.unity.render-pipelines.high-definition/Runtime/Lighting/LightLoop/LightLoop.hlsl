@@ -513,8 +513,11 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                 }
                 else // If probe volume is disabled we fallback on the ambient probes
                 {
-                    tempBuiltinData.bakeDiffuseLighting = EvaluateAmbientProbe(bsdfData.normalWS);
-                    tempBuiltinData.backBakeDiffuseLighting = EvaluateAmbientProbe(-bsdfData.normalWS);
+                    // tempBuiltinData.bakeDiffuseLighting = EvaluateAmbientProbe(bsdfData.normalWS);
+                    // tempBuiltinData.backBakeDiffuseLighting = EvaluateAmbientProbe(-bsdfData.normalWS);
+
+                    // Clear the baked data, in preparation for using the reflection probes instead.
+                    tempBuiltinData.bakeDiffuseLighting = float3(0,0,0);
                 }
 #endif
             }
@@ -590,6 +593,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                     {
                         if (IsMatchingLightLayer(s_envLightData.lightLayers, builtinData.renderingLayers))
                         {
+                            float oldReflectionHierarchy = reflectionHierarchyWeight;
                             IndirectLighting lighting = EvaluateBSDF_Env(context, V, posInput, preLightData, s_envLightData, bsdfData, s_envLightData.influenceShapeType, GPUIMAGEBASEDLIGHTINGTYPE_REFLECTION, reflectionHierarchyWeight);
 #if defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2)
 
@@ -601,6 +605,10 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
 #endif
 
                             AccumulateIndirectLighting(lighting, aggregateLighting);
+
+                            float weight = reflectionHierarchyWeight - oldReflectionHierarchy;
+                            float4 env = SampleEnv(context, s_envLightData.envIndex, bsdfData.normalWS, 4, 1, 0.5);
+                            builtinData.bakeDiffuseLighting += weight * env.rgb;
                         }
                     }
                     // Refraction probe and reflection probe will process exactly the same weight. It will be good for performance to be able to share this computation
