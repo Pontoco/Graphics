@@ -5,7 +5,7 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/ShaderPass/VertMesh.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Decal/DecalPrepassBuffer.hlsl"
-#if (SHADERPASS == SHADERPASS_DBUFFER_MESH)
+#if (SHADERPASS == SHADERPASS_DBUFFER_MESH || SHADERPASS_FORWARD_EMISSIVE_MESH)
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/DecalMeshBiasTypeEnum.cs.hlsl"
 #endif
 
@@ -25,7 +25,7 @@ PackedVaryingsType Vert(AttributesMesh inputMesh)
     UNITY_SETUP_INSTANCE_ID(inputMesh);
 
     VaryingsType varyingsType;
-#if (SHADERPASS == SHADERPASS_DBUFFER_MESH)
+#if (SHADERPASS == SHADERPASS_DBUFFER_MESH || SHADERPASS == SHADERPASS_FORWARD_EMISSIVE_MESH)
 
     float3 worldSpaceBias = 0.0f;
     if (_DecalMeshBiasType == DECALMESHDEPTHBIASTYPE_VIEW_BIAS)
