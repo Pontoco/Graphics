@@ -1388,6 +1388,7 @@ bool IsNonZeroBSDF(float3 V, float3 L, PreLightData preLightData, BSDFData bsdfD
 {
     float NdotL = dot(bsdfData.normalWS, L);
 
+    return true;
     return HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_LIT_TRANSMISSION) || (NdotL > 0.0);
 }
 
@@ -1404,6 +1405,13 @@ CBSDF EvaluateBSDF(float3 V, float3 L, PreLightData preLightData, BSDFData bsdfD
     float clampedNdotL = saturate(NdotL);
     float flippedNdotL = ComputeWrappedDiffuseLighting(-NdotL, TRANSMISSION_WRAP_LIGHT);
     float diffuseNdotL = clampedNdotL;
+
+    // --- START HALF-LAMBERT MODIFICATION ---
+    // Valve's Half-Lambert formula: (NdotL * 0.5 + 0.5)^2
+    float wrappedNdotL = NdotL * 0.5 + 0.5;
+    float halfLambert = wrappedNdotL * wrappedNdotL;
+    diffuseNdotL = halfLambert;
+    // --- END HALF-LAMBERT MODIFICATION ---
 
     float LdotV, NdotH, LdotH, invLenLV;
     GetBSDFAngle(V, L, NdotL, NdotV, LdotV, NdotH, LdotH, invLenLV);
